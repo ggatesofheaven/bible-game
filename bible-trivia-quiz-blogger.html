@@ -1,0 +1,891 @@
+<meta charset="UTF-8">
+<style>
+
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Sans+Tamil:wght@400;600&family=Inter:wght@400;500;600&display=swap');
+  :root {
+    --gold:#C9A84C;--gold-light:#F0D080;--deep:#1A1206;
+    --parchment:#F5EDD8;--parchment-dark:#E8D9B8;
+    --crimson:#8B1A1A;--scroll:#2C1F0E;--text:#2C1F0E;
+    --muted:#7A6A50;--correct:#2D6A2D;--wrong:#8B1A1A;--radius:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--deep);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background-image:radial-gradient(ellipse at 20% 20%,rgba(201,168,76,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(139,26,26,0.08) 0%,transparent 60%);}
+  .card{background:var(--parchment);border-radius:16px;width:100%;max-width:620px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(201,168,76,0.3);}
+  .card-header{background:linear-gradient(135deg,var(--scroll) 0%,#1A1206 100%);padding:28px 28px 20px;text-align:center;border-bottom:2px solid var(--gold);position:relative;}
+  .card-header::after{content:'✦ ✝ ✦';display:block;color:var(--gold);font-size:13px;letter-spacing:8px;margin-top:8px;opacity:0.7;}
+  .game-title{font-family:'Cinzel',serif;font-size:clamp(20px,4vw,28px);font-weight:800;color:var(--gold-light);letter-spacing:2px;}
+  .game-subtitle{font-family:'Noto Sans Tamil',sans-serif;font-size:14px;color:var(--gold);opacity:0.8;margin-top:4px;}
+  .lang-toggle{position:absolute;top:16px;right:16px;display:flex;gap:4px;}
+  .lang-btn{background:transparent;border:1px solid rgba(201,168,76,0.4);color:var(--gold);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;cursor:pointer;transition:all 0.2s;}
+  .lang-btn.active{background:var(--gold);color:var(--deep);}
+  .card-body{padding:28px;}
+  .screen{display:none;}.screen.active{display:block;}
+  .start-form{display:flex;flex-direction:column;gap:16px;}
+  .field-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+  .text-input{width:100%;padding:12px 16px;border:1.5px solid var(--parchment-dark);border-radius:var(--radius);background:white;font-size:15px;color:var(--text);font-family:'Inter',sans-serif;outline:none;transition:border-color 0.2s;}
+  .text-input:focus{border-color:var(--gold);}
+  .difficulty-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .diff-btn{padding:10px 8px;border-radius:var(--radius);border:1.5px solid var(--parchment-dark);background:white;cursor:pointer;text-align:center;transition:all 0.2s;}
+  .diff-btn .diff-icon{font-size:20px;display:block;margin-bottom:4px;}
+  .diff-btn .diff-label{font-size:12px;font-weight:600;color:var(--muted);}
+  .diff-btn.selected{border-color:var(--gold);background:rgba(201,168,76,0.1);}
+  .diff-btn.selected .diff-label{color:var(--scroll);}
+  .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold) 0%,#A8862E 100%);color:var(--deep);font-family:'Cinzel',serif;font-size:15px;font-weight:600;border:none;border-radius:var(--radius);cursor:pointer;letter-spacing:1px;transition:opacity 0.2s,transform 0.1s;box-shadow:0 4px 16px rgba(201,168,76,0.3);}
+  .btn-primary:hover{opacity:0.9;transform:translateY(-1px);}
+  .btn-primary:disabled{opacity:0.4;cursor:not-allowed;}
+  .btn-secondary{padding:10px 20px;background:transparent;color:var(--muted);font-size:13px;border:1.5px solid var(--parchment-dark);border-radius:var(--radius);cursor:pointer;transition:all 0.2s;}
+  .btn-secondary:hover{border-color:var(--gold);color:var(--scroll);}
+  .quiz-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .q-counter{font-family:'Cinzel',serif;font-size:13px;color:var(--muted);font-weight:600;}
+  .score-badge{background:var(--scroll);color:var(--gold-light);font-size:13px;font-weight:600;padding:4px 14px;border-radius:20px;font-family:'Cinzel',serif;}
+  .timer-bar-wrap{background:var(--parchment-dark);height:5px;border-radius:4px;margin-bottom:20px;overflow:hidden;}
+  .timer-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--crimson));border-radius:4px;transition:width 1s linear;}
+  .question-text{font-family:'Cinzel',serif;font-size:clamp(14px,3vw,17px);color:var(--scroll);font-weight:600;line-height:1.5;margin-bottom:6px;min-height:52px;}
+  .question-ref{font-size:11px;color:var(--muted);margin-bottom:20px;font-style:italic;}
+  .options-grid{display:flex;flex-direction:column;gap:10px;}
+  .option-btn{padding:13px 16px;background:white;border:1.5px solid var(--parchment-dark);border-radius:var(--radius);text-align:left;cursor:pointer;font-size:14px;color:var(--text);font-family:'Inter',sans-serif;transition:all 0.2s;display:flex;align-items:center;gap:12px;line-height:1.4;}
+  .option-btn:hover:not(:disabled){border-color:var(--gold);background:rgba(201,168,76,0.05);}
+  .option-btn .opt-letter{width:26px;height:26px;border-radius:50%;background:var(--parchment-dark);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0;}
+  .option-btn.correct{background:rgba(45,106,45,0.08);border-color:var(--correct);}
+  .option-btn.correct .opt-letter{background:var(--correct);color:white;}
+  .option-btn.wrong{background:rgba(139,26,26,0.08);border-color:var(--wrong);}
+  .option-btn.wrong .opt-letter{background:var(--wrong);color:white;}
+  .option-btn:disabled{cursor:default;}
+  .feedback-bar{margin-top:16px;padding:12px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;display:none;}
+  .feedback-bar.show{display:block;}
+  .feedback-bar.correct{background:rgba(45,106,45,0.1);color:var(--correct);border:1px solid rgba(45,106,45,0.2);}
+  .feedback-bar.wrong{background:rgba(139,26,26,0.08);color:var(--wrong);border:1px solid rgba(139,26,26,0.15);}
+  .next-btn-wrap{margin-top:16px;text-align:right;display:none;}
+  .next-btn-wrap.show{display:block;}
+  .loading-state{text-align:center;padding:40px 20px;}
+  .spinner{width:36px;height:36px;border:3px solid var(--parchment-dark);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-text{color:var(--muted);font-size:14px;}
+  .result-crown{text-align:center;font-size:52px;margin-bottom:8px;}
+  .result-title{font-family:'Cinzel',serif;font-size:22px;color:var(--scroll);text-align:center;font-weight:800;margin-bottom:4px;}
+  .result-score-big{text-align:center;font-family:'Cinzel',serif;font-size:42px;font-weight:800;color:var(--gold);margin:12px 0 4px;}
+  .result-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:24px;}
+  .result-verse{background:var(--scroll);color:var(--gold-light);border-radius:var(--radius);padding:16px 20px;font-size:13px;line-height:1.6;text-align:center;font-style:italic;margin-bottom:24px;}
+  .result-actions{display:flex;gap:10px;}
+  .result-actions .btn-primary{flex:1;}
+  .lb-title{font-family:'Cinzel',serif;font-size:18px;color:var(--scroll);font-weight:800;margin-bottom:4px;text-align:center;}
+  .lb-subtitle{text-align:center;color:var(--muted);font-size:12px;margin-bottom:20px;}
+  .lb-list{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;}
+  .lb-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:white;border-radius:var(--radius);border:1.5px solid var(--parchment-dark);}
+  .lb-item.top-1{border-color:#C9A84C;background:rgba(201,168,76,0.05);}
+  .lb-item.top-2{border-color:#A8A8A8;}
+  .lb-item.top-3{border-color:#CD7F32;}
+  .lb-rank{font-family:'Cinzel',serif;font-size:14px;font-weight:800;color:var(--muted);width:24px;text-align:center;flex-shrink:0;}
+  .lb-rank.gold{color:#C9A84C;}.lb-rank.silver{color:#A8A8A8;}.lb-rank.bronze{color:#CD7F32;}
+  .lb-name{flex:1;font-weight:600;font-size:14px;color:var(--text);}
+  .lb-meta{font-size:11px;color:var(--muted);}
+  .lb-score{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--scroll);}
+  .lb-empty{text-align:center;color:var(--muted);font-size:14px;padding:32px;}
+  .lb-back{margin-top:16px;}
+  .tab-row{display:flex;gap:8px;margin-bottom:20px;}
+  .tab-btn{flex:1;padding:9px;border-radius:8px;border:1.5px solid var(--parchment-dark);background:white;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.2s;text-align:center;}
+  .tab-btn.active{background:var(--scroll);color:var(--gold-light);border-color:var(--scroll);}
+  .error-msg{color:var(--crimson);font-size:12px;text-align:center;margin-top:8px;display:none;}
+  .error-msg.show{display:block;}
+  .fb-status{font-size:11px;text-align:center;padding:7px 12px;border-radius:8px;margin-bottom:12px;display:none;}
+  .fb-status.show{display:block;}
+  .fb-status.ok{background:rgba(45,106,45,0.1);color:var(--correct);}
+  .fb-status.err{background:rgba(139,26,26,0.08);color:var(--wrong);}
+
+</style>
+
+<div class="card">
+  <div class="card-header">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('en')" id="btn-en">EN</button>
+      <button class="lang-btn" onclick="setLang('ta')" id="btn-ta">த</button>
+    </div>
+    <div class="game-title" id="main-title">BIBLE TRIVIA</div>
+    <div class="game-subtitle" id="main-subtitle">பைபிள் வினாடி வினா</div>
+  </div>
+  <div class="card-body">
+
+    <!-- START -->
+    <div class="screen active" id="screen-start">
+      <div class="fb-status" id="fb-status"></div>
+      <div class="start-form">
+        <div>
+          <div class="field-label" id="lbl-name">Your Name</div>
+          <input class="text-input" id="player-name" type="text" placeholder="Enter your name..." maxlength="24"/>
+        </div>
+        <div>
+          <div class="field-label" id="lbl-diff">Choose Difficulty</div>
+          <div class="difficulty-grid">
+            <div class="diff-btn selected" onclick="selectDiff('easy',this)">
+              <span class="diff-icon">🕊️</span><span class="diff-label" id="diff-easy">Easy</span>
+            </div>
+            <div class="diff-btn" onclick="selectDiff('medium',this)">
+              <span class="diff-icon">✝️</span><span class="diff-label" id="diff-medium">Medium</span>
+            </div>
+            <div class="diff-btn" onclick="selectDiff('hard',this)">
+              <span class="diff-icon">📖</span><span class="diff-label" id="diff-hard">Hard</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="startGame()"><span id="lbl-start-btn">Begin Quiz</span></button>
+        <div style="text-align:center">
+          <button class="btn-secondary" onclick="showLeaderboard()" id="lbl-lb-btn">🏆 Leaderboard</button>
+        </div>
+        <div class="error-msg" id="start-error"></div>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="screen" id="screen-loading">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <div class="loading-text" id="lbl-loading">Preparing your questions...</div>
+      </div>
+    </div>
+
+    <!-- QUIZ -->
+    <div class="screen" id="screen-quiz">
+      <div class="quiz-meta">
+        <div class="q-counter" id="q-counter">Question 1 / 10</div>
+        <div class="score-badge" id="score-display">Score: 0</div>
+      </div>
+      <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar" style="width:100%"></div></div>
+      <div class="question-text" id="question-text"></div>
+      <div class="question-ref" id="question-ref"></div>
+      <div class="options-grid" id="options-grid"></div>
+      <div class="feedback-bar" id="feedback-bar"></div>
+      <div class="next-btn-wrap" id="next-btn-wrap">
+        <button class="btn-primary" style="width:auto;padding:10px 28px" onclick="nextQuestion()">
+          <span id="lbl-next">Next →</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="screen" id="screen-result">
+      <div class="result-crown" id="result-crown">🏆</div>
+      <div class="result-title" id="result-title">Well Done!</div>
+      <div class="result-score-big" id="result-score">850</div>
+      <div class="result-sub" id="result-sub"></div>
+      <div class="result-verse" id="result-verse"></div>
+      <div class="result-actions">
+        <button class="btn-secondary" onclick="showLeaderboard()">🏆</button>
+        <button class="btn-primary" onclick="resetGame()"><span id="lbl-play-again">Play Again</span></button>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="screen" id="screen-leaderboard">
+      <div class="lb-title" id="lbl-lb-title">🏆 Leaderboard</div>
+      <div class="lb-subtitle" id="lbl-lb-sub">Top Bible Scholars</div>
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="filterLB('all',this)" id="tab-all-lb">All</button>
+        <button class="tab-btn" onclick="filterLB('easy',this)" id="tab-easy-lb">Easy</button>
+        <button class="tab-btn" onclick="filterLB('medium',this)" id="tab-med-lb">Medium</button>
+        <button class="tab-btn" onclick="filterLB('hard',this)" id="tab-hard-lb">Hard</button>
+      </div>
+      <div class="lb-list" id="lb-list"><div class="lb-empty" id="lbl-lb-empty">No scores yet. Be the first!</div></div>
+      <div class="lb-back">
+        <button class="btn-secondary" style="width:100%" onclick="showScreen('screen-start')">
+          <span id="lbl-back">← Back</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB2HZNkZQzNGKPizROjTjY2ShofgPvl1BA",
+  authDomain: "bible-trivia-game-4751e.firebaseapp.com",
+  projectId: "bible-trivia-game-4751e",
+  storageBucket: "bible-trivia-game-4751e.firebasestorage.app",
+  messagingSenderId: "546969570212",
+  appId: "1:546969570212:web:0437f7881381e943724f31"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+const fbEl = document.getElementById("fb-status");
+fbEl.textContent = "🔥 Connected — shared leaderboard active";
+fbEl.className = "fb-status show ok";
+setTimeout(() => fbEl.classList.remove("show"), 4000);
+
+// ── BILINGUAL QUESTION BANK ───────────────────────────────────────────────
+const QUESTIONS = {
+  easy: [
+    { en:{q:"Who built the ark?",o:["Moses","Noah","Abraham","David"]}, ta:{q:"யார் பேழையைக் கட்டினார்?",o:["மோசே","நோவா","ஆபிரகாம்","தாவீது"]}, answer:1, ref:"Genesis 6:14" },
+    { en:{q:"How many days did it rain during the great flood?",o:["20 days","30 days","40 days","50 days"]}, ta:{q:"பெரும் வெள்ளத்தின்போது எத்தனை நாள் மழை பெய்தது?",o:["20 நாட்கள்","30 நாட்கள்","40 நாட்கள்","50 நாட்கள்"]}, answer:2, ref:"Genesis 7:12" },
+    { en:{q:"Who was swallowed by a great fish?",o:["Elijah","Jonah","Daniel","Isaiah"]}, ta:{q:"ஒரு பெரிய மீன் யாரை விழுங்கியது?",o:["எலியா","யோனா","தானியேல்","ஏசாயா"]}, answer:1, ref:"Jonah 1:17" },
+    { en:{q:"How many disciples did Jesus choose?",o:["7","10","12","14"]}, ta:{q:"இயேசு எத்தனை சீடர்களைத் தேர்ந்தெடுத்தார்?",o:["7","10","12","14"]}, answer:2, ref:"Matthew 10:1" },
+    { en:{q:"Who betrayed Jesus?",o:["Peter","Thomas","Judas","John"]}, ta:{q:"யார் இயேசுவை காட்டிக் கொடுத்தார்?",o:["பேதுரு","தோமா","யூதா","யோவான்"]}, answer:2, ref:"Matthew 26:47-48" },
+    { en:{q:"In which city was Jesus born?",o:["Nazareth","Jerusalem","Bethlehem","Jericho"]}, ta:{q:"இயேசு எந்த நகரில் பிறந்தார்?",o:["நாசரேத்","எருசலேம்","பெத்லகேம்","எரிக்கோ"]}, answer:2, ref:"Luke 2:4-7" },
+    { en:{q:"What is the shortest verse in the Bible?",o:["God is love","Jesus wept","Pray always","Fear not"]}, ta:{q:"வேதாகமத்தில் மிகவும் குறுகிய வசனம் எது?",o:["தேவன் அன்பாயிருக்கிறார்","இயேசு அழுதார்","எப்போதும் ஜெபியுங்கள்","பயப்படாதே"]}, answer:1, ref:"John 11:35" },
+    { en:{q:"Who was the first king of Israel?",o:["David","Solomon","Saul","Samuel"]}, ta:{q:"இஸ்ரவேலின் முதல் ராஜா யார்?",o:["தாவீது","சாலொமோன்","சவுல்","சாமுவேல்"]}, answer:2, ref:"1 Samuel 10:24" },
+    { en:{q:"What was the first miracle of Jesus?",o:["Walking on water","Healing a blind man","Turning water into wine","Feeding 5000"]}, ta:{q:"இயேசுவின் முதல் அற்புதம் என்ன?",o:["தண்ணீரின் மேல் நடந்தது","குருடனை குணமாக்கியது","தண்ணீரை திராட்சை இரசமாக்கியது","5000 பேரை உணவளித்தது"]}, answer:2, ref:"John 2:1-11" },
+    { en:{q:"Who wrote most of the Psalms?",o:["Solomon","Moses","David","Asaph"]}, ta:{q:"சங்கீதங்களில் பெரும்பாலானவற்றை யார் எழுதினார்?",o:["சாலொமோன்","மோசே","தாவீது","ஆசாப்"]}, answer:2, ref:"Book of Psalms" },
+    { en:{q:"How many books are in the Bible?",o:["60","66","72","80"]}, ta:{q:"வேதாகமத்தில் எத்தனை புத்தகங்கள் உள்ளன?",o:["60","66","72","80"]}, answer:1, ref:"Bible overview" },
+    { en:{q:"Who was the mother of Jesus?",o:["Elizabeth","Martha","Mary","Sarah"]}, ta:{q:"இயேசுவின் தாய் யார்?",o:["எலிசபெத்","மார்த்தாள்","மரியாள்","சாராள்"]}, answer:2, ref:"Luke 1:30-31" },
+    { en:{q:"What did God create on the first day?",o:["Animals","Light","Water","Sky"]}, ta:{q:"தேவன் முதல் நாளில் எதை படைத்தார்?",o:["மிருகங்கள்","வெளிச்சம்","தண்ணீர்","வானம்"]}, answer:1, ref:"Genesis 1:3" },
+    { en:{q:"Who was thrown into the lions den?",o:["Elijah","David","Daniel","Ezekiel"]}, ta:{q:"யார் சிங்கங்களின் குகையில் போடப்பட்டார்?",o:["எலியா","தாவீது","தானியேல்","எசேக்கியேல்"]}, answer:2, ref:"Daniel 6:16" },
+    { en:{q:"What river was Jesus baptized in?",o:["Nile","Euphrates","Jordan","Galilee"]}, ta:{q:"இயேசு எந்த நதியில் ஞானஸ்நானம் பெற்றார்?",o:["நைல்","யூப்பிரட்டீஸ்","யோர்தான்","கலிலேயா"]}, answer:2, ref:"Matthew 3:13" },
+    { en:{q:"Who was Adam s first wife?",o:["Delilah","Ruth","Eve","Esther"]}, ta:{q:"ஆதாமின் முதல் மனைவி யார்?",o:["தெலிலா","ரூத்","ஏவாள்","எஸ்தர்"]}, answer:2, ref:"Genesis 2:22" },
+    { en:{q:"How many commandments did God give Moses?",o:["5","7","10","12"]}, ta:{q:"தேவன் மோசேக்கு எத்தனை கட்டளைகளை கொடுத்தார்?",o:["5","7","10","12"]}, answer:2, ref:"Exodus 20" },
+    { en:{q:"Who killed Goliath?",o:["Saul","Solomon","David","Jonathan"]}, ta:{q:"யார் கோலியாத்தை கொன்றார்?",o:["சவுல்","சாலொமோன்","தாவீது","யோனத்தான்"]}, answer:2, ref:"1 Samuel 17:50" },
+    { en:{q:"What fruit did Adam and Eve eat?",o:["Apple","Forbidden fruit","Fig","Grape"]}, ta:{q:"ஆதாமும் ஏவாளும் எந்த கனியை சாப்பிட்டார்கள்?",o:["ஆப்பிள்","தடை செய்யப்பட்ட கனி","அத்தி","திராட்சை"]}, answer:1, ref:"Genesis 3:6" },
+    { en:{q:"Who was the father of John the Baptist?",o:["Joseph","Zechariah","Simeon","Eli"]}, ta:{q:"யோவான் ஸ்நானனின் தகப்பன் யார்?",o:["யோசேப்பு","சகரியா","சிமியோன்","ஏலி"]}, answer:1, ref:"Luke 1:13" },
+    { en:{q:"On which day did God rest after creation?",o:["Fifth","Sixth","Seventh","Eighth"]}, ta:{q:"படைப்பிற்குப் பின் தேவன் எந்த நாளில் ஓய்வெடுத்தார்?",o:["ஐந்தாம்","ஆறாம்","ஏழாம்","எட்டாம்"]}, answer:2, ref:"Genesis 2:2" },
+    { en:{q:"Who led the Israelites out of Egypt?",o:["Abraham","Joshua","Moses","Aaron"]}, ta:{q:"இஸ்ரவேலர்களை எகிப்திலிருந்து யார் வழிநடத்தினார்?",o:["ஆபிரகாம்","யோசுவா","மோசே","ஆரோன்"]}, answer:2, ref:"Exodus 14:21-22" },
+    { en:{q:"What was the name of the garden where Adam and Eve lived?",o:["Garden of Gethsemane","Garden of Eden","Garden of Nazareth","Garden of Zion"]}, ta:{q:"ஆதாமும் ஏவாளும் வாழ்ந்த தோட்டத்தின் பெயர் என்ன?",o:["கெத்செமனே தோட்டம்","ஏதேன் தோட்டம்","நாசரேத் தோட்டம்","சீயோன் தோட்டம்"]}, answer:1, ref:"Genesis 2:8" },
+    { en:{q:"Who was the wisest king in the Bible?",o:["David","Solomon","Hezekiah","Josiah"]}, ta:{q:"வேதாகமத்தில் மிகவும் ஞானமான ராஜா யார்?",o:["தாவீது","சாலொமோன்","எசேக்கியா","யோசியா"]}, answer:1, ref:"1 Kings 3:12" },
+    { en:{q:"How many people were on Noah s ark?",o:["4","6","8","10"]}, ta:{q:"நோவாவின் பேழையில் எத்தனை பேர் இருந்தார்கள்?",o:["4","6","8","10"]}, answer:2, ref:"Genesis 7:13" },
+    { en:{q:"What language was the New Testament originally written in?",o:["Hebrew","Latin","Greek","Aramaic"]}, ta:{q:"புதிய ஏற்பாடு முதலில் எந்த மொழியில் எழுதப்பட்டது?",o:["எபிரேயு","லத்தீன்","கிரேக்கம்","அரமேயம்"]}, answer:2, ref:"Bible history" },
+    { en:{q:"Who was the first person to see the risen Jesus?",o:["Peter","Mary Magdalene","John","Thomas"]}, ta:{q:"உயிர்த்தெழுந்த இயேசுவை முதலில் யார் பார்த்தார்?",o:["பேதுரு","மகதலேனா மரியாள்","யோவான்","தோமா"]}, answer:1, ref:"John 20:14-16" },
+    { en:{q:"How many days was Jesus in the tomb?",o:["1","2","3","4"]}, ta:{q:"இயேசு கல்லறையில் எத்தனை நாட்கள் இருந்தார்?",o:["1","2","3","4"]}, answer:2, ref:"Matthew 12:40" },
+    { en:{q:"Who denied Jesus three times?",o:["John","James","Peter","Andrew"]}, ta:{q:"யார் இயேசுவை மூன்று முறை மறுதலித்தார்?",o:["யோவான்","யாக்கோபு","பேதுரு","அந்திரேயா"]}, answer:2, ref:"Matthew 26:75" },
+    { en:{q:"What did the wise men follow to find Jesus?",o:["An angel","A star","A dove","A cloud"]}, ta:{q:"ஞானிகள் இயேசுவைக் கண்டுபிடிக்க எதைப் பின்தொடர்ந்தார்கள்?",o:["ஒரு தூதன்","ஒரு நட்சத்திரம்","ஒரு புறா","ஒரு மேகம்"]}, answer:1, ref:"Matthew 2:9" }
+  ],
+  medium: [
+    { en:{q:"Who wrote the Book of Revelation?",o:["Paul","Peter","John","James"]}, ta:{q:"வெளிப்படுத்தின விசேஷம் புத்தகத்தை யார் எழுதினார்?",o:["பவுல்","பேதுரு","யோவான்","யாக்கோபு"]}, answer:2, ref:"Revelation 1:1" },
+    { en:{q:"How many brothers did Joseph have?",o:["10","11","12","13"]}, ta:{q:"யோசேப்பிற்கு எத்தனை சகோதரர்கள் இருந்தார்கள்?",o:["10","11","12","13"]}, answer:1, ref:"Genesis 35:22" },
+    { en:{q:"What was the name of Abraham s wife?",o:["Rebekah","Leah","Rachel","Sarah"]}, ta:{q:"ஆபிரகாமின் மனைவியின் பெயர் என்ன?",o:["ரெபேக்கா","லேயா","ராகேல்","சாராள்"]}, answer:3, ref:"Genesis 11:29" },
+    { en:{q:"Which apostle walked on water with Jesus?",o:["John","James","Peter","Andrew"]}, ta:{q:"எந்த சீடர் இயேசுவோடு தண்ணீரின் மேல் நடந்தார்?",o:["யோவான்","யாக்கோபு","பேதுரு","அந்திரேயா"]}, answer:2, ref:"Matthew 14:29" },
+    { en:{q:"In which prison did Paul and Silas sing hymns?",o:["Jerusalem","Caesarea","Philippi","Rome"]}, ta:{q:"பவுலும் சீலாவும் எந்த சிறையில் கீர்த்தனைகள் பாடினார்கள்?",o:["எருசலேம்","செசரியா","பிலிப்பி","ரோம்"]}, answer:2, ref:"Acts 16:25" },
+    { en:{q:"What was the sign of the covenant God made with Noah?",o:["A star","A rainbow","A dove","A cloud"]}, ta:{q:"நோவாவோடு தேவன் செய்த உடன்படிக்கையின் அடையாளம் என்ன?",o:["ஒரு நட்சத்திரம்","ஒரு வானவில்","ஒரு புறா","ஒரு மேகம்"]}, answer:1, ref:"Genesis 9:13" },
+    { en:{q:"How many lepers did Jesus heal at one time?",o:["3","5","7","10"]}, ta:{q:"இயேசு ஒரே நேரத்தில் எத்தனை குஷ்டரோகிகளை குணமாக்கினார்?",o:["3","5","7","10"]}, answer:3, ref:"Luke 17:12-14" },
+    { en:{q:"Who was Barnabas companion on the first missionary journey?",o:["Peter","Timothy","Paul","Silas"]}, ta:{q:"முதல் மிஷனரி பயணத்தில் பர்னபாவின் துணைவர் யார்?",o:["பேதுரு","தீமோத்தேயு","பவுல்","சீலா"]}, answer:2, ref:"Acts 13:2" },
+    { en:{q:"What did Jesus write on the ground when the woman was caught in adultery?",o:["The law","Her sins","Nothing is recorded","The names of accusers"]}, ta:{q:"விபசாரத்தில் பிடிக்கப்பட்ட பெண்ணின்போது இயேசு தரையில் என்ன எழுதினார்?",o:["நியாயப்பிரமாணம்","அவளுடைய பாவங்கள்","எதுவும் பதிவில்லை","குற்றஞ்சாட்டுவோர் பெயர்கள்"]}, answer:2, ref:"John 8:6-8" },
+    { en:{q:"What was the name of Moses mother?",o:["Miriam","Jochebed","Zipporah","Deborah"]}, ta:{q:"மோசேயின் தாயின் பெயர் என்ன?",o:["மிரியாம்","யோகேபேத்","சிப்போரா","தெபோரா"]}, answer:1, ref:"Exodus 6:20" },
+    { en:{q:"Which book comes first in the New Testament?",o:["Mark","Luke","Matthew","John"]}, ta:{q:"புதிய ஏற்பாட்டில் முதல் புத்தகம் எது?",o:["மாற்கு","லூக்கா","மத்தேயு","யோவான்"]}, answer:2, ref:"Bible order" },
+    { en:{q:"How many fish did the disciples catch after Jesus told them to cast the net?",o:["100","153","200","212"]}, ta:{q:"இயேசு வலையை போடுங்கள் என்று சொன்னதும் சீடர்கள் எத்தனை மீன் பிடித்தார்கள்?",o:["100","153","200","212"]}, answer:1, ref:"John 21:11" },
+    { en:{q:"Who baptized Jesus?",o:["Peter","Elijah","John the Baptist","Philip"]}, ta:{q:"இயேசுவுக்கு யார் ஞானஸ்நானம் கொடுத்தார்?",o:["பேதுரு","எலியா","யோவான் ஸ்நானன்","பிலிப்பு"]}, answer:2, ref:"Matthew 3:13-15" },
+    { en:{q:"What was Paul s name before he became a Christian?",o:["Barnabas","Silas","Saul","Stephen"]}, ta:{q:"கிறிஸ்தவராவதற்கு முன் பவுலின் பெயர் என்ன?",o:["பர்னபா","சீலா","சவுல்","ஸ்தேவான்"]}, answer:2, ref:"Acts 9:1" },
+    { en:{q:"Which Old Testament prophet was taken to heaven in a chariot of fire?",o:["Elisha","Isaiah","Ezekiel","Elijah"]}, ta:{q:"எந்த பழைய ஏற்பாட்டு தீர்க்கதரிசி அக்கினி தேரில் பரலோகம் சென்றார்?",o:["எலிசா","ஏசாயா","எசேக்கியேல்","எலியா"]}, answer:3, ref:"2 Kings 2:11" },
+    { en:{q:"How many plagues did God send on Egypt?",o:["7","8","10","12"]}, ta:{q:"தேவன் எகிப்தில் எத்தனை வாதைகளை அனுப்பினார்?",o:["7","8","10","12"]}, answer:2, ref:"Exodus 7-12" },
+    { en:{q:"What was the name of the high priest who interrogated Jesus?",o:["Annas","Caiaphas","Herod","Pilate"]}, ta:{q:"இயேசுவை விசாரித்த பிரதான ஆசாரியனின் பெயர் என்ன?",o:["அன்னா","காயப்பா","ஏரோது","பிலாத்து"]}, answer:1, ref:"Matthew 26:57" },
+    { en:{q:"Which book of the Bible has 150 chapters?",o:["Isaiah","Psalms","Proverbs","Jeremiah"]}, ta:{q:"வேதாகமத்தில் எந்த புத்தகத்தில் 150 அதிகாரங்கள் உள்ளன?",o:["ஏசாயா","சங்கீதம்","நீதிமொழிகள்","எரேமியா"]}, answer:1, ref:"Book of Psalms" },
+    { en:{q:"Who was the first Christian martyr?",o:["Peter","James","Stephen","Paul"]}, ta:{q:"முதல் கிறிஸ்தவ மறைசாட்சி யார்?",o:["பேதுரு","யாக்கோபு","ஸ்தேவான்","பவுல்"]}, answer:2, ref:"Acts 7:59-60" },
+    { en:{q:"What did Judas receive for betraying Jesus?",o:["20 pieces of gold","30 pieces of silver","50 coins","A piece of land"]}, ta:{q:"இயேசுவை காட்டிக்கொடுத்ததற்காக யூதாஸ் என்ன பெற்றான்?",o:["20 தங்க நாணயங்கள்","30 வெள்ளி நாணயங்கள்","50 காசுகள்","ஒரு நிலத்துண்டு"]}, answer:1, ref:"Matthew 26:15" },
+    { en:{q:"Which woman hid the two spies sent by Joshua?",o:["Deborah","Ruth","Rahab","Esther"]}, ta:{q:"யோசுவா அனுப்பிய இரண்டு ஒற்றர்களை எந்த பெண் மறைத்தாள்?",o:["தெபோரா","ரூத்","ராகாப்","எஸ்தர்"]}, answer:2, ref:"Joshua 2:4" },
+    { en:{q:"What was the name of the pool where Jesus healed the paralyzed man?",o:["Siloam","Bethesda","Galilee","Kidron"]}, ta:{q:"இயேசு முடக்குவாதமுள்ளவனை குணமாக்கிய குளத்தின் பெயர் என்ன?",o:["சிலோவாம்","பெத்தேஸ்தா","கலிலேயா","கெத்ரோன்"]}, answer:1, ref:"John 5:2-9" },
+    { en:{q:"Who was the first judge of Israel?",o:["Samson","Gideon","Othniel","Deborah"]}, ta:{q:"இஸ்ரவேலின் முதல் நியாயாதிபதி யார்?",o:["சிம்சோன்","கிதியோன்","உத்னியேல்","தெபோரா"]}, answer:2, ref:"Judges 3:9-10" },
+    { en:{q:"How many books are in the Old Testament?",o:["33","36","39","42"]}, ta:{q:"பழைய ஏற்பாட்டில் எத்தனை புத்தகங்கள் உள்ளன?",o:["33","36","39","42"]}, answer:2, ref:"Bible overview" },
+    { en:{q:"Who was Isaac s wife?",o:["Rachel","Leah","Rebekah","Sarah"]}, ta:{q:"ஈசாக்கின் மனைவி யார்?",o:["ராகேல்","லேயா","ரெபேக்கா","சாராள்"]}, answer:2, ref:"Genesis 24:67" },
+    { en:{q:"In which city was Paul born?",o:["Jerusalem","Rome","Tarsus","Athens"]}, ta:{q:"பவுல் எந்த நகரில் பிறந்தார்?",o:["எருசலேம்","ரோம்","தர்சு","ஆதென்"]}, answer:2, ref:"Acts 22:3" },
+    { en:{q:"Who was the first person to be called a Hebrew in the Bible?",o:["Noah","Abraham","Isaac","Jacob"]}, ta:{q:"வேதாகமத்தில் எபிரேயன் என்று முதல் முதலில் அழைக்கப்பட்டவர் யார்?",o:["நோவா","ஆபிரகாம்","ஈசாக்கு","யாக்கோபு"]}, answer:1, ref:"Genesis 14:13" },
+    { en:{q:"What instrument did David play?",o:["Trumpet","Harp","Flute","Drum"]}, ta:{q:"தாவீது எந்த இசைக்கருவி வாசித்தார்?",o:["எக்காளம்","சுரமண்டலம்","புல்லாங்குழல்","மேளம்"]}, answer:1, ref:"1 Samuel 16:23" },
+    { en:{q:"Who was the son of promise given to Abraham and Sarah?",o:["Ishmael","Esau","Isaac","Jacob"]}, ta:{q:"ஆபிரகாமுக்கும் சாராளுக்கும் கொடுக்கப்பட்ட வாக்குத்தத்தத்தின் குமாரன் யார்?",o:["இஸ்மவேல்","ஏசா","ஈசாக்கு","யாக்கோபு"]}, answer:2, ref:"Genesis 17:19" },
+    { en:{q:"Which woman became queen and saved the Jewish people?",o:["Ruth","Deborah","Esther","Miriam"]}, ta:{q:"யாதொரு பெண் ராணியாகி யூத மக்களை காத்தாள்?",o:["ரூத்","தெபோரா","எஸ்தர்","மிரியாம்"]}, answer:2, ref:"Esther 4:14" },
+    { en:{q:"What was the name of the mountain where Moses received the Ten Commandments?",o:["Mount Zion","Mount Hermon","Mount Sinai","Mount Carmel"]}, ta:{q:"மோசே பத்து கட்டளைகளை பெற்ற மலையின் பெயர் என்ன?",o:["சீயோன் மலை","ஹெர்மோன் மலை","சீனாய் மலை","கர்மேல் மலை"]}, answer:2, ref:"Exodus 19:20" }
+  ],
+  hard: [
+    { en:{q:"What was the name of the Philistine giant that Goliath s brother killed?",o:["Saph","Lahmi","Ishbi-Benob","Elhanan"]}, ta:{q:"கோலியாத்தின் சகோதரனை கொன்றவன் யார்?",o:["சாப்","லஹ்மி","இஷ்பி-பெனோப்","எல்ஹானான்"]}, answer:1, ref:"2 Samuel 21:19" },
+    { en:{q:"How many years did the Israelites wander in the wilderness?",o:["20","30","40","50"]}, ta:{q:"இஸ்ரவேலர்கள் வனாந்தரத்தில் எத்தனை ஆண்டுகள் அலைந்தார்கள்?",o:["20","30","40","50"]}, answer:2, ref:"Numbers 14:33" },
+    { en:{q:"Who was the father of Methuselah?",o:["Adam","Enoch","Noah","Seth"]}, ta:{q:"மெத்தூசலாவின் தகப்பன் யார்?",o:["ஆதாம்","ஏனோக்கு","நோவா","சேத்"]}, answer:1, ref:"Genesis 5:21" },
+    { en:{q:"Which prophet married a prostitute as commanded by God?",o:["Jeremiah","Hosea","Amos","Micah"]}, ta:{q:"தேவன் கட்டளையிட்டதன்படி எந்த தீர்க்கதரிசி ஒரு வேசியை மணந்தார்?",o:["எரேமியா","ஓசியா","ஆமோஸ்","மீகா"]}, answer:1, ref:"Hosea 1:2" },
+    { en:{q:"What is the name of the angel who appeared to Mary?",o:["Michael","Raphael","Gabriel","Uriel"]}, ta:{q:"மரியாளிடம் தோன்றிய தூதனின் பெயர் என்ன?",o:["மிகாயேல்","ரபாயேல்","காபிரியேல்","உரியேல்"]}, answer:2, ref:"Luke 1:26-27" },
+    { en:{q:"How many sons did Jacob have?",o:["10","11","12","13"]}, ta:{q:"யாக்கோபிற்கு எத்தனை குமாரர்கள் இருந்தார்கள்?",o:["10","11","12","13"]}, answer:2, ref:"Genesis 35:22" },
+    { en:{q:"What is the Hebrew word for peace?",o:["Amen","Shalom","Hallelu","Hosanna"]}, ta:{q:"சமாதானம் என்பதற்கான எபிரேய வார்த்தை என்ன?",o:["ஆமென்","சாலோம்","அல்லேலு","ஒசன்னா"]}, answer:1, ref:"Hebrew vocabulary" },
+    { en:{q:"Who wrote the majority of the New Testament epistles?",o:["Peter","John","Paul","James"]}, ta:{q:"புதிய ஏற்பாட்டு நிருபங்களில் பெரும்பாலானவற்றை யார் எழுதினார்?",o:["பேதுரு","யோவான்","பவுல்","யாக்கோபு"]}, answer:2, ref:"Bible overview" },
+    { en:{q:"In which book does God speak from a whirlwind?",o:["Psalms","Proverbs","Job","Ecclesiastes"]}, ta:{q:"எந்த புத்தகத்தில் தேவன் சுழற்காற்றிலிருந்து பேசுகிறார்?",o:["சங்கீதம்","நீதிமொழிகள்","யோபு","பிரசங்கி"]}, answer:2, ref:"Job 38:1" },
+    { en:{q:"What was the name of Abraham s father?",o:["Nahor","Terah","Haran","Shem"]}, ta:{q:"ஆபிரகாமின் தகப்பனின் பெயர் என்ன?",o:["நாகோர்","தேரா","ஆரான்","சேம்"]}, answer:1, ref:"Genesis 11:26" },
+    { en:{q:"How many days and nights did Elijah travel to reach Mount Horeb?",o:["7","14","40","21"]}, ta:{q:"ஏலியா ஓரேப் மலையை அடைய எத்தனை நாள் இரவு பயணம் செய்தார்?",o:["7","14","40","21"]}, answer:2, ref:"1 Kings 19:8" },
+    { en:{q:"Who was the Roman governor who sentenced Jesus to death?",o:["Herod","Felix","Festus","Pilate"]}, ta:{q:"இயேசுவுக்கு மரண தண்டனை விதித்த ரோமன் ஆளுநர் யார்?",o:["ஏரோது","பேலிக்ஸ்","பெஸ்து","பிலாத்து"]}, answer:3, ref:"John 19:16" },
+    { en:{q:"What is the last word in the Bible?",o:["Faith","Amen","Grace","Lord"]}, ta:{q:"வேதாகமத்தின் கடைசி வார்த்தை என்ன?",o:["விசுவாசம்","ஆமென்","கிருபை","கர்த்தர்"]}, answer:1, ref:"Revelation 22:21" },
+    { en:{q:"Which king had a dream about a statue made of different materials?",o:["Solomon","Pharaoh","Nebuchadnezzar","Darius"]}, ta:{q:"வெவ்வேறு பொருட்களால் செய்யப்பட்ட சிலையைப் பற்றி யாருக்கு கனவு வந்தது?",o:["சாலொமோன்","பார்வோன்","நேபுகத்நேச்சர்","தாரியு"]}, answer:2, ref:"Daniel 2:31" },
+    { en:{q:"What was the name of the prophetess who judged Israel?",o:["Miriam","Huldah","Deborah","Anna"]}, ta:{q:"இஸ்ரவேலை நடுத்தீர்த்த தீர்க்கதரிசி பெண்ணின் பெயர் என்ன?",o:["மிரியாம்","ஹுல்தா","தெபோரா","அன்னாள்"]}, answer:2, ref:"Judges 4:4" },
+    { en:{q:"How many chapters are in the Book of Psalms?",o:["100","120","150","175"]}, ta:{q:"சங்கீத புத்தகத்தில் எத்தனை அதிகாரங்கள் உள்ளன?",o:["100","120","150","175"]}, answer:2, ref:"Book of Psalms" },
+    { en:{q:"Who interpreted Pharaoh s dream?",o:["Moses","Daniel","Joseph","Solomon"]}, ta:{q:"பார்வோனின் கனவை யார் விளக்கினார்?",o:["மோசே","தானியேல்","யோசேப்பு","சாலொமோன்"]}, answer:2, ref:"Genesis 41:15-16" },
+    { en:{q:"What is the first commandment?",o:["Do not murder","Do not steal","You shall have no other gods before Me","Remember the Sabbath"]}, ta:{q:"முதல் கட்டளை என்ன?",o:["கொலை செய்யாதே","திருட வேண்டாம்","என்னையன்றி வேறே தேவர்கள் உனக்கு இருக்கலாகாது","ஓய்வுநாளை நினை"]}, answer:2, ref:"Exodus 20:3" },
+    { en:{q:"Which book of the Bible describes the armor of God?",o:["Romans","Colossians","Ephesians","Philippians"]}, ta:{q:"வேதாகமத்தில் எந்த புத்தகம் தேவனின் ஆயுதவர்க்கத்தை விவரிக்கிறது?",o:["ரோமர்","கொலோசெயர்","எபேசியர்","பிலிப்பியர்"]}, answer:2, ref:"Ephesians 6:11-17" },
+    { en:{q:"Who was the twin brother of Jacob?",o:["Ishmael","Esau","Levi","Judah"]}, ta:{q:"யாக்கோபின் இரட்டை சகோதரன் யார்?",o:["இஸ்மவேல்","ஏசா","லேவி","யூதா"]}, answer:1, ref:"Genesis 25:24-26" },
+    { en:{q:"How old was Methuselah when he died?",o:["777","888","969","999"]}, ta:{q:"மெத்தூசலா இறந்தபோது அவருக்கு எத்தனை வயது?",o:["777","888","969","999"]}, answer:2, ref:"Genesis 5:27" },
+    { en:{q:"What was the name of Moses Ethiopian wife?",o:["Zipporah","Miriam","Deborah","Rahab"]}, ta:{q:"மோசேயின் எத்தியோப்பிய மனைவியின் பெயர் என்ன?",o:["சிப்போரா","மிரியாம்","தெபோரா","ராகாப்"]}, answer:0, ref:"Numbers 12:1" },
+    { en:{q:"Which sea did Moses part?",o:["Dead Sea","Mediterranean Sea","Red Sea","Sea of Galilee"]}, ta:{q:"மோசே எந்த கடலை பிரித்தார்?",o:["மிருத சமுத்திரம்","மத்தியத்தரைக் கடல்","சிவந்த கடல்","கலிலேயா கடல்"]}, answer:2, ref:"Exodus 14:21" },
+    { en:{q:"Which disciple was a tax collector before following Jesus?",o:["Peter","John","Matthew","Simon"]}, ta:{q:"இயேசுவைப் பின்தொடர்வதற்கு முன் எந்த சீடர் வரிவசூலிப்பவராக இருந்தார்?",o:["பேதுரு","யோவான்","மத்தேயு","சீமோன்"]}, answer:2, ref:"Matthew 9:9" },
+    { en:{q:"What was the name of the well where Jesus spoke with the Samaritan woman?",o:["Well of Abraham","Well of Moses","Jacob s Well","Well of Elijah"]}, ta:{q:"இயேசு சமாரிய பெண்ணிடம் பேசிய கிணற்றின் பெயர் என்ன?",o:["ஆபிரகாமின் கிணறு","மோசேயின் கிணறு","யாக்கோபின் கிணறு","எலியாவின் கிணறு"]}, answer:2, ref:"John 4:6" },
+    { en:{q:"Who was the first person in the Bible to get drunk?",o:["Lot","Noah","Samson","Solomon"]}, ta:{q:"வேதாகமத்தில் முதல் முதலில் குடிவெறியடைந்தவர் யார்?",o:["லோத்து","நோவா","சிம்சோன்","சாலொமோன்"]}, answer:1, ref:"Genesis 9:21" },
+    { en:{q:"How many people did Jesus feed with five loaves and two fish?",o:["3000","4000","5000","6000"]}, ta:{q:"இயேசு ஐந்து அப்பங்களாலும் இரண்டு மீன்களாலும் எத்தனை பேருக்கு உணவளித்தார்?",o:["3000","4000","5000","6000"]}, answer:2, ref:"Matthew 14:21" },
+    { en:{q:"What was the name of David s son who rebelled against him?",o:["Solomon","Amnon","Absalom","Adonijah"]}, ta:{q:"தாவீதுக்கு விரோதமாக கிளர்ச்சி செய்த அவருடைய குமாரன் யார்?",o:["சாலொமோன்","அம்னோன்","அப்சலோம்","அத்தோனியா"]}, answer:2, ref:"2 Samuel 15:10" },
+    { en:{q:"Who anointed David as king?",o:["Moses","Elijah","Samuel","Nathan"]}, ta:{q:"தாவீதை ராஜாவாக அபிஷேகம் செய்தவர் யார்?",o:["மோசே","எலியா","சாமுவேல்","நாத்தான்"]}, answer:2, ref:"1 Samuel 16:13" },
+    { en:{q:"Which river turned to blood in the first plague of Egypt?",o:["Nile","Jordan","Euphrates","Tigris"]}, ta:{q:"எகிப்தின் முதல் வாதையில் எந்த நதி இரத்தமாக மாறியது?",o:["நைல்","யோர்தான்","யூப்பிரட்டீஸ்","டைகிரிஸ்"]}, answer:0, ref:"Exodus 7:20" }
+  ]
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let lang = "en", difficulty = "easy", playerName = "";
+let questions = [], currentQ = 0, score = 0, correctCount = 0;
+let timerInterval = null, timeLeft = 0, allScores = [], lbFilter = "all";
+const TIMER  = {easy:30, medium:20, hard:15};
+const POINTS = {easy:100, medium:150, hard:200};
+
+// ── TRANSLATIONS ──────────────────────────────────────────────────────────
+const T = {
+  en:{
+    title:"BIBLE TRIVIA", subtitle:"பைபிள் வினாடி வினா",
+    lblName:"Your Name", lblDiff:"Choose Difficulty",
+    diffEasy:"Easy", diffMed:"Medium", diffHard:"Hard",
+    startBtn:"Begin Quiz", lbBtn:"🏆 Leaderboard",
+    loading:"Preparing your questions...",
+    qCounter:(c,t)=>`Question ${c} / ${t}`,
+    scoreLabel:s=>`Score: ${s}`,
+    next:"Next", correct:"✓ Correct!",
+    wrong:a=>`✗ Answer: ${a}`,
+    playAgain:"Play Again", lbTitle:"🏆 Leaderboard",
+    lbSub:"Top Bible Scholars", lbEmpty:"No scores yet. Be the first!",
+    back:"Back", nameError:"Please enter your name to begin.",
+    resultTitle:s=>s>=800?"Outstanding!":s>=500?"Well Done!":"Keep Studying!",
+    resultSub:(c,t)=>`${c} / ${t} correct`, pts:"pts",
+    tabAll:"All", tabEasy:"Easy", tabMed:"Medium", tabHard:"Hard",
+    ref:"Reference",
+    verse:{
+      good:"\"Your word is a lamp for my feet, a light on my path.\" — Psalm 119:105",
+      mid:"\"Study to show yourself approved to God.\" — 2 Timothy 2:15",
+      low:"\"For the word of God is alive and active.\" — Hebrews 4:12"
+    }
+  },
+  ta:{
+    title:"பைபிள் வினாடி வினா", subtitle:"BIBLE TRIVIA",
+    lblName:"உங்கள் பெயர்", lblDiff:"கஷ்டத்தை தேர்வு செய்யுங்கள்",
+    diffEasy:"எளிது", diffMed:"நடுத்தரம்", diffHard:"கடினம்",
+    startBtn:"விளையாட்டு தொடங்கு", lbBtn:"🏆 தர வரிசை",
+    loading:"கேள்விகளை தயாரிக்கிறோம்...",
+    qCounter:(c,t)=>`கேள்வி ${c} / ${t}`,
+    scoreLabel:s=>`மதிப்பெண்: ${s}`,
+    next:"அடுத்தது", correct:"✓ சரி!",
+    wrong:a=>`✗ சரியான பதில்: ${a}`,
+    playAgain:"மீண்டும் விளையாடு", lbTitle:"🏆 தர வரிசை",
+    lbSub:"சிறந்த வேத அறிஞர்கள்", lbEmpty:"இன்னும் மதிப்பெண் இல்லை!",
+    back:"பின்னால்", nameError:"தொடர உங்கள் பெயரை உள்ளிடவும்.",
+    resultTitle:s=>s>=800?"அற்புதம்!":s>=500?"நன்றாக செய்தீர்கள்!":"மேலும் படிக்கவும்!",
+    resultSub:(c,t)=>`${c} / ${t} சரியான பதில்`, pts:"புள்ளி",
+    tabAll:"அனைத்தும்", tabEasy:"எளிது", tabMed:"நடுத்தரம்", tabHard:"கடினம்",
+    ref:"குறிப்பு",
+    verse:{
+      good:"\"உம்முடைய வார்த்தை என் கால்களுக்கு தீபமாகவும் என் பாதைக்கு வெளிச்சமாகவும் இருக்கிறது.\" — சங்கீதம் 119:105",
+      mid:"\"உன்னை தேவனுக்கு அங்கீகரிக்கப்பட்டவனாக காட்டும்படி ஜாக்கிரதையாயிரு.\" — 2 தீமோத்தேயு 2:15",
+      low:"\"தேவனுடைய வார்த்தை ஜீவனும் வல்லமையும் உள்ளது.\" — எபிரெயர் 4:12"
+    }
+  }
+};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function shuffle(arr){ return arr.sort(()=>Math.random()-0.5); }
+
+window.setLang = function(l){
+  lang=l;
+  document.getElementById("btn-en").classList.toggle("active",l==="en");
+  document.getElementById("btn-ta").classList.toggle("active",l==="ta");
+  const t=T[l];
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  set("main-title",t.title); set("main-subtitle",t.subtitle);
+  set("lbl-name",t.lblName); set("lbl-diff",t.lblDiff);
+  set("diff-easy",t.diffEasy); set("diff-medium",t.diffMed); set("diff-hard",t.diffHard);
+  set("lbl-start-btn",t.startBtn); set("lbl-lb-btn",t.lbBtn);
+  set("lbl-loading",t.loading); set("lbl-next",t.next);
+  set("lbl-play-again",t.playAgain); set("lbl-lb-title",t.lbTitle);
+  set("lbl-lb-sub",t.lbSub); set("lbl-lb-empty",t.lbEmpty); set("lbl-back",t.back);
+  set("tab-easy-lb",t.tabEasy); set("tab-med-lb",t.tabMed); set("tab-hard-lb",t.tabHard);
+  document.getElementById("player-name").placeholder=l==="en"?"Enter your name...":"உங்கள் பெயர்...";
+};
+
+window.selectDiff = function(d,el){
+  difficulty=d;
+  document.querySelectorAll(".diff-btn").forEach(b=>b.classList.remove("selected"));
+  el.classList.add("selected");
+};
+
+window.showScreen = function(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+};
+
+// ── START GAME ────────────────────────────────────────────────────────────
+window.startGame = function(){
+  playerName=document.getElementById("player-name").value.trim();
+  const err=document.getElementById("start-error");
+  if(!playerName){err.textContent=T[lang].nameError;err.classList.add("show");return;}
+  err.classList.remove("show");
+  showScreen("screen-loading");
+  setTimeout(()=>{
+    const pool=shuffle([...QUESTIONS[difficulty]]).slice(0,10);
+    questions=pool; currentQ=0; score=0; correctCount=0;
+    showScreen("screen-quiz");
+    renderQuestion();
+  },600);
+};
+
+// ── RENDER QUESTION ───────────────────────────────────────────────────────
+function renderQuestion(){
+  const q=questions[currentQ], t=T[lang];
+  const qData=q[lang];
+  document.getElementById("q-counter").textContent=t.qCounter(currentQ+1,questions.length);
+  document.getElementById("score-display").textContent=t.scoreLabel(score);
+  document.getElementById("question-text").textContent=qData.q;
+  document.getElementById("question-ref").textContent="";
+  document.getElementById("feedback-bar").className="feedback-bar";
+  document.getElementById("next-btn-wrap").className="next-btn-wrap";
+  const grid=document.getElementById("options-grid");
+  grid.innerHTML="";
+  ["A","B","C","D"].forEach((letter,i)=>{
+    const btn=document.createElement("button");
+    btn.className="option-btn";
+    btn.innerHTML=`<span class="opt-letter">${letter}</span><span>${qData.o[i]}</span>`;
+    btn.onclick=()=>selectAnswer(i);
+    grid.appendChild(btn);
+  });
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timeLeft=TIMER[difficulty];
+  document.getElementById("timer-bar").style.width="100%";
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    document.getElementById("timer-bar").style.width=(timeLeft/TIMER[difficulty]*100)+"%";
+    if(timeLeft<=0){clearInterval(timerInterval);selectAnswer(-1);}
+  },1000);
+}
+
+function selectAnswer(chosen){
+  clearInterval(timerInterval);
+  const q=questions[currentQ], t=T[lang], qData=q[lang];
+  const btns=document.querySelectorAll(".option-btn");
+  btns.forEach(b=>b.disabled=true);
+  btns[q.answer].classList.add("correct");
+  if(chosen>=0&&chosen!==q.answer)btns[chosen].classList.add("wrong");
+  const ok=chosen===q.answer;
+  if(ok){score+=POINTS[difficulty]+Math.floor((timeLeft/TIMER[difficulty])*POINTS[difficulty]);correctCount++;}
+  const fb=document.getElementById("feedback-bar");
+  fb.innerHTML=(ok?t.correct:t.wrong(qData.o[q.answer]))+` <span style="opacity:0.7;font-size:11px;margin-left:8px">📖 ${q.ref}</span>`;
+  fb.className="feedback-bar show "+(ok?"correct":"wrong");
+  document.getElementById("score-display").textContent=t.scoreLabel(score);
+  document.getElementById("next-btn-wrap").className="next-btn-wrap show";
+  document.getElementById("lbl-next").textContent=
+    currentQ<questions.length-1?t.next:(lang==="en"?"Finish ✓":"முடி ✓");
+}
+
+window.nextQuestion=function(){
+  currentQ++;
+  currentQ>=questions.length?endGame():renderQuestion();
+};
+
+// ── END GAME ──────────────────────────────────────────────────────────────
+async function endGame(){
+  clearInterval(timerInterval);
+  const t=T[lang];
+  showScreen("screen-result");
+  document.getElementById("result-crown").textContent=score>=800?"🏆":score>=500?"⭐":"📖";
+  document.getElementById("result-title").textContent=t.resultTitle(score);
+  document.getElementById("result-score").textContent=score+" "+t.pts;
+  document.getElementById("result-sub").textContent=t.resultSub(correctCount,questions.length);
+  const vk=score>=800?"good":score>=500?"mid":"low";
+  document.getElementById("result-verse").textContent=t.verse[vk];
+  await saveScore();
+}
+
+// ── FIREBASE ──────────────────────────────────────────────────────────────
+async function saveScore(){
+  try{
+    await addDoc(collection(db,"leaderboard"),{
+      name:playerName,score,correct:correctCount,
+      total:questions.length,difficulty,lang,
+      date:new Date().toLocaleDateString(),
+      createdAt:serverTimestamp()
+    });
+  }catch(e){console.error("Save failed:",e);}
+}
+
+window.showLeaderboard=async function(){
+  showScreen("screen-leaderboard");
+  document.getElementById("lb-list").innerHTML=
+    "<div class=\"lb-empty\"><div class=\"spinner\" style=\"width:24px;height:24px;margin:0 auto 8px;border-width:2px\"></div></div>";
+  try{
+    const q=query(collection(db,"leaderboard"),orderBy("score","desc"),limit(100));
+    const snap=await getDocs(q);
+    allScores=snap.docs.map(d=>d.data());
+  }catch(e){allScores=[];}
+  renderLB();
+};
+
+window.filterLB=function(f,el){
+  lbFilter=f;
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
+  renderLB();
+};
+
+function renderLB(){
+  const t=T[lang];
+  const filtered=lbFilter==="all"?allScores:allScores.filter(s=>s.difficulty===lbFilter);
+  const list=document.getElementById("lb-list");
+  if(!filtered.length){list.innerHTML=`<div class="lb-empty">${t.lbEmpty}</div>`;return;}
+  const medals=["🥇","🥈","🥉"],rc=["top-1","top-2","top-3"],rk=["gold","silver","bronze"];
+  list.innerHTML=filtered.slice(0,20).map((s,i)=>`
+    <div class="lb-item ${rc[i]||""}">
+      <div class="lb-rank ${rk[i]||""}">${medals[i]||(i+1)}</div>
+      <div style="flex:1">
+        <div class="lb-name">${s.name}</div>
+        <div class="lb-meta">${s.correct}/${s.total} &middot; ${s.difficulty} &middot; ${s.date}</div>
+      </div>
+      <div class="lb-score">${s.score}</div>
+    </div>`).join("");
+}
+
+window.resetGame=function(){showScreen("screen-start");};
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB2HZNkZQzNGKPizROjTjY2ShofgPvl1BA",
+  authDomain: "bible-trivia-game-4751e.firebaseapp.com",
+  projectId: "bible-trivia-game-4751e",
+  storageBucket: "bible-trivia-game-4751e.firebasestorage.app",
+  messagingSenderId: "546969570212",
+  appId: "1:546969570212:web:0437f7881381e943724f31"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+const fbEl = document.getElementById("fb-status");
+fbEl.textContent = "🔥 Connected — shared leaderboard active";
+fbEl.className = "fb-status show ok";
+setTimeout(() => fbEl.classList.remove("show"), 4000);
+
+// ── BILINGUAL QUESTION BANK ───────────────────────────────────────────────
+const QUESTIONS = {
+  easy: [
+    { en:{q:"Who built the ark?",o:["Moses","Noah","Abraham","David"]}, ta:{q:"யார் பேழையைக் கட்டினார்?",o:["மோசே","நோவா","ஆபிரகாம்","தாவீது"]}, answer:1, ref:"Genesis 6:14" },
+    { en:{q:"How many days did it rain during the great flood?",o:["20 days","30 days","40 days","50 days"]}, ta:{q:"பெரும் வெள்ளத்தின்போது எத்தனை நாள் மழை பெய்தது?",o:["20 நாட்கள்","30 நாட்கள்","40 நாட்கள்","50 நாட்கள்"]}, answer:2, ref:"Genesis 7:12" },
+    { en:{q:"Who was swallowed by a great fish?",o:["Elijah","Jonah","Daniel","Isaiah"]}, ta:{q:"ஒரு பெரிய மீன் யாரை விழுங்கியது?",o:["எலியா","யோனா","தானியேல்","ஏசாயா"]}, answer:1, ref:"Jonah 1:17" },
+    { en:{q:"How many disciples did Jesus choose?",o:["7","10","12","14"]}, ta:{q:"இயேசு எத்தனை சீடர்களைத் தேர்ந்தெடுத்தார்?",o:["7","10","12","14"]}, answer:2, ref:"Matthew 10:1" },
+    { en:{q:"Who betrayed Jesus?",o:["Peter","Thomas","Judas","John"]}, ta:{q:"யார் இயேசுவை காட்டிக் கொடுத்தார்?",o:["பேதுரு","தோமா","யூதா","யோவான்"]}, answer:2, ref:"Matthew 26:47-48" },
+    { en:{q:"In which city was Jesus born?",o:["Nazareth","Jerusalem","Bethlehem","Jericho"]}, ta:{q:"இயேசு எந்த நகரில் பிறந்தார்?",o:["நாசரேத்","எருசலேம்","பெத்லகேம்","எரிக்கோ"]}, answer:2, ref:"Luke 2:4-7" },
+    { en:{q:"What is the shortest verse in the Bible?",o:["God is love","Jesus wept","Pray always","Fear not"]}, ta:{q:"வேதாகமத்தில் மிகவும் குறுகிய வசனம் எது?",o:["தேவன் அன்பாயிருக்கிறார்","இயேசு அழுதார்","எப்போதும் ஜெபியுங்கள்","பயப்படாதே"]}, answer:1, ref:"John 11:35" },
+    { en:{q:"Who was the first king of Israel?",o:["David","Solomon","Saul","Samuel"]}, ta:{q:"இஸ்ரவேலின் முதல் ராஜா யார்?",o:["தாவீது","சாலொமோன்","சவுல்","சாமுவேல்"]}, answer:2, ref:"1 Samuel 10:24" },
+    { en:{q:"What was the first miracle of Jesus?",o:["Walking on water","Healing a blind man","Turning water into wine","Feeding 5000"]}, ta:{q:"இயேசுவின் முதல் அற்புதம் என்ன?",o:["தண்ணீரின் மேல் நடந்தது","குருடனை குணமாக்கியது","தண்ணீரை திராட்சை இரசமாக்கியது","5000 பேரை உணவளித்தது"]}, answer:2, ref:"John 2:1-11" },
+    { en:{q:"Who wrote most of the Psalms?",o:["Solomon","Moses","David","Asaph"]}, ta:{q:"சங்கீதங்களில் பெரும்பாலானவற்றை யார் எழுதினார்?",o:["சாலொமோன்","மோசே","தாவீது","ஆசாப்"]}, answer:2, ref:"Book of Psalms" },
+    { en:{q:"How many books are in the Bible?",o:["60","66","72","80"]}, ta:{q:"வேதாகமத்தில் எத்தனை புத்தகங்கள் உள்ளன?",o:["60","66","72","80"]}, answer:1, ref:"Bible overview" },
+    { en:{q:"Who was the mother of Jesus?",o:["Elizabeth","Martha","Mary","Sarah"]}, ta:{q:"இயேசுவின் தாய் யார்?",o:["எலிசபெத்","மார்த்தாள்","மரியாள்","சாராள்"]}, answer:2, ref:"Luke 1:30-31" },
+    { en:{q:"What did God create on the first day?",o:["Animals","Light","Water","Sky"]}, ta:{q:"தேவன் முதல் நாளில் எதை படைத்தார்?",o:["மிருகங்கள்","வெளிச்சம்","தண்ணீர்","வானம்"]}, answer:1, ref:"Genesis 1:3" },
+    { en:{q:"Who was thrown into the lions den?",o:["Elijah","David","Daniel","Ezekiel"]}, ta:{q:"யார் சிங்கங்களின் குகையில் போடப்பட்டார்?",o:["எலியா","தாவீது","தானியேல்","எசேக்கியேல்"]}, answer:2, ref:"Daniel 6:16" },
+    { en:{q:"What river was Jesus baptized in?",o:["Nile","Euphrates","Jordan","Galilee"]}, ta:{q:"இயேசு எந்த நதியில் ஞானஸ்நானம் பெற்றார்?",o:["நைல்","யூப்பிரட்டீஸ்","யோர்தான்","கலிலேயா"]}, answer:2, ref:"Matthew 3:13" },
+    { en:{q:"Who was Adam s first wife?",o:["Delilah","Ruth","Eve","Esther"]}, ta:{q:"ஆதாமின் முதல் மனைவி யார்?",o:["தெலிலா","ரூத்","ஏவாள்","எஸ்தர்"]}, answer:2, ref:"Genesis 2:22" },
+    { en:{q:"How many commandments did God give Moses?",o:["5","7","10","12"]}, ta:{q:"தேவன் மோசேக்கு எத்தனை கட்டளைகளை கொடுத்தார்?",o:["5","7","10","12"]}, answer:2, ref:"Exodus 20" },
+    { en:{q:"Who killed Goliath?",o:["Saul","Solomon","David","Jonathan"]}, ta:{q:"யார் கோலியாத்தை கொன்றார்?",o:["சவுல்","சாலொமோன்","தாவீது","யோனத்தான்"]}, answer:2, ref:"1 Samuel 17:50" },
+    { en:{q:"What fruit did Adam and Eve eat?",o:["Apple","Forbidden fruit","Fig","Grape"]}, ta:{q:"ஆதாமும் ஏவாளும் எந்த கனியை சாப்பிட்டார்கள்?",o:["ஆப்பிள்","தடை செய்யப்பட்ட கனி","அத்தி","திராட்சை"]}, answer:1, ref:"Genesis 3:6" },
+    { en:{q:"Who was the father of John the Baptist?",o:["Joseph","Zechariah","Simeon","Eli"]}, ta:{q:"யோவான் ஸ்நானனின் தகப்பன் யார்?",o:["யோசேப்பு","சகரியா","சிமியோன்","ஏலி"]}, answer:1, ref:"Luke 1:13" },
+    { en:{q:"On which day did God rest after creation?",o:["Fifth","Sixth","Seventh","Eighth"]}, ta:{q:"படைப்பிற்குப் பின் தேவன் எந்த நாளில் ஓய்வெடுத்தார்?",o:["ஐந்தாம்","ஆறாம்","ஏழாம்","எட்டாம்"]}, answer:2, ref:"Genesis 2:2" },
+    { en:{q:"Who led the Israelites out of Egypt?",o:["Abraham","Joshua","Moses","Aaron"]}, ta:{q:"இஸ்ரவேலர்களை எகிப்திலிருந்து யார் வழிநடத்தினார்?",o:["ஆபிரகாம்","யோசுவா","மோசே","ஆரோன்"]}, answer:2, ref:"Exodus 14:21-22" },
+    { en:{q:"What was the name of the garden where Adam and Eve lived?",o:["Garden of Gethsemane","Garden of Eden","Garden of Nazareth","Garden of Zion"]}, ta:{q:"ஆதாமும் ஏவாளும் வாழ்ந்த தோட்டத்தின் பெயர் என்ன?",o:["கெத்செமனே தோட்டம்","ஏதேன் தோட்டம்","நாசரேத் தோட்டம்","சீயோன் தோட்டம்"]}, answer:1, ref:"Genesis 2:8" },
+    { en:{q:"Who was the wisest king in the Bible?",o:["David","Solomon","Hezekiah","Josiah"]}, ta:{q:"வேதாகமத்தில் மிகவும் ஞானமான ராஜா யார்?",o:["தாவீது","சாலொமோன்","எசேக்கியா","யோசியா"]}, answer:1, ref:"1 Kings 3:12" },
+    { en:{q:"How many people were on Noah s ark?",o:["4","6","8","10"]}, ta:{q:"நோவாவின் பேழையில் எத்தனை பேர் இருந்தார்கள்?",o:["4","6","8","10"]}, answer:2, ref:"Genesis 7:13" },
+    { en:{q:"What language was the New Testament originally written in?",o:["Hebrew","Latin","Greek","Aramaic"]}, ta:{q:"புதிய ஏற்பாடு முதலில் எந்த மொழியில் எழுதப்பட்டது?",o:["எபிரேயு","லத்தீன்","கிரேக்கம்","அரமேயம்"]}, answer:2, ref:"Bible history" },
+    { en:{q:"Who was the first person to see the risen Jesus?",o:["Peter","Mary Magdalene","John","Thomas"]}, ta:{q:"உயிர்த்தெழுந்த இயேசுவை முதலில் யார் பார்த்தார்?",o:["பேதுரு","மகதலேனா மரியாள்","யோவான்","தோமா"]}, answer:1, ref:"John 20:14-16" },
+    { en:{q:"How many days was Jesus in the tomb?",o:["1","2","3","4"]}, ta:{q:"இயேசு கல்லறையில் எத்தனை நாட்கள் இருந்தார்?",o:["1","2","3","4"]}, answer:2, ref:"Matthew 12:40" },
+    { en:{q:"Who denied Jesus three times?",o:["John","James","Peter","Andrew"]}, ta:{q:"யார் இயேசுவை மூன்று முறை மறுதலித்தார்?",o:["யோவான்","யாக்கோபு","பேதுரு","அந்திரேயா"]}, answer:2, ref:"Matthew 26:75" },
+    { en:{q:"What did the wise men follow to find Jesus?",o:["An angel","A star","A dove","A cloud"]}, ta:{q:"ஞானிகள் இயேசுவைக் கண்டுபிடிக்க எதைப் பின்தொடர்ந்தார்கள்?",o:["ஒரு தூதன்","ஒரு நட்சத்திரம்","ஒரு புறா","ஒரு மேகம்"]}, answer:1, ref:"Matthew 2:9" }
+  ],
+  medium: [
+    { en:{q:"Who wrote the Book of Revelation?",o:["Paul","Peter","John","James"]}, ta:{q:"வெளிப்படுத்தின விசேஷம் புத்தகத்தை யார் எழுதினார்?",o:["பவுல்","பேதுரு","யோவான்","யாக்கோபு"]}, answer:2, ref:"Revelation 1:1" },
+    { en:{q:"How many brothers did Joseph have?",o:["10","11","12","13"]}, ta:{q:"யோசேப்பிற்கு எத்தனை சகோதரர்கள் இருந்தார்கள்?",o:["10","11","12","13"]}, answer:1, ref:"Genesis 35:22" },
+    { en:{q:"What was the name of Abraham s wife?",o:["Rebekah","Leah","Rachel","Sarah"]}, ta:{q:"ஆபிரகாமின் மனைவியின் பெயர் என்ன?",o:["ரெபேக்கா","லேயா","ராகேல்","சாராள்"]}, answer:3, ref:"Genesis 11:29" },
+    { en:{q:"Which apostle walked on water with Jesus?",o:["John","James","Peter","Andrew"]}, ta:{q:"எந்த சீடர் இயேசுவோடு தண்ணீரின் மேல் நடந்தார்?",o:["யோவான்","யாக்கோபு","பேதுரு","அந்திரேயா"]}, answer:2, ref:"Matthew 14:29" },
+    { en:{q:"In which prison did Paul and Silas sing hymns?",o:["Jerusalem","Caesarea","Philippi","Rome"]}, ta:{q:"பவுலும் சீலாவும் எந்த சிறையில் கீர்த்தனைகள் பாடினார்கள்?",o:["எருசலேம்","செசரியா","பிலிப்பி","ரோம்"]}, answer:2, ref:"Acts 16:25" },
+    { en:{q:"What was the sign of the covenant God made with Noah?",o:["A star","A rainbow","A dove","A cloud"]}, ta:{q:"நோவாவோடு தேவன் செய்த உடன்படிக்கையின் அடையாளம் என்ன?",o:["ஒரு நட்சத்திரம்","ஒரு வானவில்","ஒரு புறா","ஒரு மேகம்"]}, answer:1, ref:"Genesis 9:13" },
+    { en:{q:"How many lepers did Jesus heal at one time?",o:["3","5","7","10"]}, ta:{q:"இயேசு ஒரே நேரத்தில் எத்தனை குஷ்டரோகிகளை குணமாக்கினார்?",o:["3","5","7","10"]}, answer:3, ref:"Luke 17:12-14" },
+    { en:{q:"Who was Barnabas companion on the first missionary journey?",o:["Peter","Timothy","Paul","Silas"]}, ta:{q:"முதல் மிஷனரி பயணத்தில் பர்னபாவின் துணைவர் யார்?",o:["பேதுரு","தீமோத்தேயு","பவுல்","சீலா"]}, answer:2, ref:"Acts 13:2" },
+    { en:{q:"What did Jesus write on the ground when the woman was caught in adultery?",o:["The law","Her sins","Nothing is recorded","The names of accusers"]}, ta:{q:"விபசாரத்தில் பிடிக்கப்பட்ட பெண்ணின்போது இயேசு தரையில் என்ன எழுதினார்?",o:["நியாயப்பிரமாணம்","அவளுடைய பாவங்கள்","எதுவும் பதிவில்லை","குற்றஞ்சாட்டுவோர் பெயர்கள்"]}, answer:2, ref:"John 8:6-8" },
+    { en:{q:"What was the name of Moses mother?",o:["Miriam","Jochebed","Zipporah","Deborah"]}, ta:{q:"மோசேயின் தாயின் பெயர் என்ன?",o:["மிரியாம்","யோகேபேத்","சிப்போரா","தெபோரா"]}, answer:1, ref:"Exodus 6:20" },
+    { en:{q:"Which book comes first in the New Testament?",o:["Mark","Luke","Matthew","John"]}, ta:{q:"புதிய ஏற்பாட்டில் முதல் புத்தகம் எது?",o:["மாற்கு","லூக்கா","மத்தேயு","யோவான்"]}, answer:2, ref:"Bible order" },
+    { en:{q:"How many fish did the disciples catch after Jesus told them to cast the net?",o:["100","153","200","212"]}, ta:{q:"இயேசு வலையை போடுங்கள் என்று சொன்னதும் சீடர்கள் எத்தனை மீன் பிடித்தார்கள்?",o:["100","153","200","212"]}, answer:1, ref:"John 21:11" },
+    { en:{q:"Who baptized Jesus?",o:["Peter","Elijah","John the Baptist","Philip"]}, ta:{q:"இயேசுவுக்கு யார் ஞானஸ்நானம் கொடுத்தார்?",o:["பேதுரு","எலியா","யோவான் ஸ்நானன்","பிலிப்பு"]}, answer:2, ref:"Matthew 3:13-15" },
+    { en:{q:"What was Paul s name before he became a Christian?",o:["Barnabas","Silas","Saul","Stephen"]}, ta:{q:"கிறிஸ்தவராவதற்கு முன் பவுலின் பெயர் என்ன?",o:["பர்னபா","சீலா","சவுல்","ஸ்தேவான்"]}, answer:2, ref:"Acts 9:1" },
+    { en:{q:"Which Old Testament prophet was taken to heaven in a chariot of fire?",o:["Elisha","Isaiah","Ezekiel","Elijah"]}, ta:{q:"எந்த பழைய ஏற்பாட்டு தீர்க்கதரிசி அக்கினி தேரில் பரலோகம் சென்றார்?",o:["எலிசா","ஏசாயா","எசேக்கியேல்","எலியா"]}, answer:3, ref:"2 Kings 2:11" },
+    { en:{q:"How many plagues did God send on Egypt?",o:["7","8","10","12"]}, ta:{q:"தேவன் எகிப்தில் எத்தனை வாதைகளை அனுப்பினார்?",o:["7","8","10","12"]}, answer:2, ref:"Exodus 7-12" },
+    { en:{q:"What was the name of the high priest who interrogated Jesus?",o:["Annas","Caiaphas","Herod","Pilate"]}, ta:{q:"இயேசுவை விசாரித்த பிரதான ஆசாரியனின் பெயர் என்ன?",o:["அன்னா","காயப்பா","ஏரோது","பிலாத்து"]}, answer:1, ref:"Matthew 26:57" },
+    { en:{q:"Which book of the Bible has 150 chapters?",o:["Isaiah","Psalms","Proverbs","Jeremiah"]}, ta:{q:"வேதாகமத்தில் எந்த புத்தகத்தில் 150 அதிகாரங்கள் உள்ளன?",o:["ஏசாயா","சங்கீதம்","நீதிமொழிகள்","எரேமியா"]}, answer:1, ref:"Book of Psalms" },
+    { en:{q:"Who was the first Christian martyr?",o:["Peter","James","Stephen","Paul"]}, ta:{q:"முதல் கிறிஸ்தவ மறைசாட்சி யார்?",o:["பேதுரு","யாக்கோபு","ஸ்தேவான்","பவுல்"]}, answer:2, ref:"Acts 7:59-60" },
+    { en:{q:"What did Judas receive for betraying Jesus?",o:["20 pieces of gold","30 pieces of silver","50 coins","A piece of land"]}, ta:{q:"இயேசுவை காட்டிக்கொடுத்ததற்காக யூதாஸ் என்ன பெற்றான்?",o:["20 தங்க நாணயங்கள்","30 வெள்ளி நாணயங்கள்","50 காசுகள்","ஒரு நிலத்துண்டு"]}, answer:1, ref:"Matthew 26:15" },
+    { en:{q:"Which woman hid the two spies sent by Joshua?",o:["Deborah","Ruth","Rahab","Esther"]}, ta:{q:"யோசுவா அனுப்பிய இரண்டு ஒற்றர்களை எந்த பெண் மறைத்தாள்?",o:["தெபோரா","ரூத்","ராகாப்","எஸ்தர்"]}, answer:2, ref:"Joshua 2:4" },
+    { en:{q:"What was the name of the pool where Jesus healed the paralyzed man?",o:["Siloam","Bethesda","Galilee","Kidron"]}, ta:{q:"இயேசு முடக்குவாதமுள்ளவனை குணமாக்கிய குளத்தின் பெயர் என்ன?",o:["சிலோவாம்","பெத்தேஸ்தா","கலிலேயா","கெத்ரோன்"]}, answer:1, ref:"John 5:2-9" },
+    { en:{q:"Who was the first judge of Israel?",o:["Samson","Gideon","Othniel","Deborah"]}, ta:{q:"இஸ்ரவேலின் முதல் நியாயாதிபதி யார்?",o:["சிம்சோன்","கிதியோன்","உத்னியேல்","தெபோரா"]}, answer:2, ref:"Judges 3:9-10" },
+    { en:{q:"How many books are in the Old Testament?",o:["33","36","39","42"]}, ta:{q:"பழைய ஏற்பாட்டில் எத்தனை புத்தகங்கள் உள்ளன?",o:["33","36","39","42"]}, answer:2, ref:"Bible overview" },
+    { en:{q:"Who was Isaac s wife?",o:["Rachel","Leah","Rebekah","Sarah"]}, ta:{q:"ஈசாக்கின் மனைவி யார்?",o:["ராகேல்","லேயா","ரெபேக்கா","சாராள்"]}, answer:2, ref:"Genesis 24:67" },
+    { en:{q:"In which city was Paul born?",o:["Jerusalem","Rome","Tarsus","Athens"]}, ta:{q:"பவுல் எந்த நகரில் பிறந்தார்?",o:["எருசலேம்","ரோம்","தர்சு","ஆதென்"]}, answer:2, ref:"Acts 22:3" },
+    { en:{q:"Who was the first person to be called a Hebrew in the Bible?",o:["Noah","Abraham","Isaac","Jacob"]}, ta:{q:"வேதாகமத்தில் எபிரேயன் என்று முதல் முதலில் அழைக்கப்பட்டவர் யார்?",o:["நோவா","ஆபிரகாம்","ஈசாக்கு","யாக்கோபு"]}, answer:1, ref:"Genesis 14:13" },
+    { en:{q:"What instrument did David play?",o:["Trumpet","Harp","Flute","Drum"]}, ta:{q:"தாவீது எந்த இசைக்கருவி வாசித்தார்?",o:["எக்காளம்","சுரமண்டலம்","புல்லாங்குழல்","மேளம்"]}, answer:1, ref:"1 Samuel 16:23" },
+    { en:{q:"Who was the son of promise given to Abraham and Sarah?",o:["Ishmael","Esau","Isaac","Jacob"]}, ta:{q:"ஆபிரகாமுக்கும் சாராளுக்கும் கொடுக்கப்பட்ட வாக்குத்தத்தத்தின் குமாரன் யார்?",o:["இஸ்மவேல்","ஏசா","ஈசாக்கு","யாக்கோபு"]}, answer:2, ref:"Genesis 17:19" },
+    { en:{q:"Which woman became queen and saved the Jewish people?",o:["Ruth","Deborah","Esther","Miriam"]}, ta:{q:"யாதொரு பெண் ராணியாகி யூத மக்களை காத்தாள்?",o:["ரூத்","தெபோரா","எஸ்தர்","மிரியாம்"]}, answer:2, ref:"Esther 4:14" },
+    { en:{q:"What was the name of the mountain where Moses received the Ten Commandments?",o:["Mount Zion","Mount Hermon","Mount Sinai","Mount Carmel"]}, ta:{q:"மோசே பத்து கட்டளைகளை பெற்ற மலையின் பெயர் என்ன?",o:["சீயோன் மலை","ஹெர்மோன் மலை","சீனாய் மலை","கர்மேல் மலை"]}, answer:2, ref:"Exodus 19:20" }
+  ],
+  hard: [
+    { en:{q:"What was the name of the Philistine giant that Goliath s brother killed?",o:["Saph","Lahmi","Ishbi-Benob","Elhanan"]}, ta:{q:"கோலியாத்தின் சகோதரனை கொன்றவன் யார்?",o:["சாப்","லஹ்மி","இஷ்பி-பெனோப்","எல்ஹானான்"]}, answer:1, ref:"2 Samuel 21:19" },
+    { en:{q:"How many years did the Israelites wander in the wilderness?",o:["20","30","40","50"]}, ta:{q:"இஸ்ரவேலர்கள் வனாந்தரத்தில் எத்தனை ஆண்டுகள் அலைந்தார்கள்?",o:["20","30","40","50"]}, answer:2, ref:"Numbers 14:33" },
+    { en:{q:"Who was the father of Methuselah?",o:["Adam","Enoch","Noah","Seth"]}, ta:{q:"மெத்தூசலாவின் தகப்பன் யார்?",o:["ஆதாம்","ஏனோக்கு","நோவா","சேத்"]}, answer:1, ref:"Genesis 5:21" },
+    { en:{q:"Which prophet married a prostitute as commanded by God?",o:["Jeremiah","Hosea","Amos","Micah"]}, ta:{q:"தேவன் கட்டளையிட்டதன்படி எந்த தீர்க்கதரிசி ஒரு வேசியை மணந்தார்?",o:["எரேமியா","ஓசியா","ஆமோஸ்","மீகா"]}, answer:1, ref:"Hosea 1:2" },
+    { en:{q:"What is the name of the angel who appeared to Mary?",o:["Michael","Raphael","Gabriel","Uriel"]}, ta:{q:"மரியாளிடம் தோன்றிய தூதனின் பெயர் என்ன?",o:["மிகாயேல்","ரபாயேல்","காபிரியேல்","உரியேல்"]}, answer:2, ref:"Luke 1:26-27" },
+    { en:{q:"How many sons did Jacob have?",o:["10","11","12","13"]}, ta:{q:"யாக்கோபிற்கு எத்தனை குமாரர்கள் இருந்தார்கள்?",o:["10","11","12","13"]}, answer:2, ref:"Genesis 35:22" },
+    { en:{q:"What is the Hebrew word for peace?",o:["Amen","Shalom","Hallelu","Hosanna"]}, ta:{q:"சமாதானம் என்பதற்கான எபிரேய வார்த்தை என்ன?",o:["ஆமென்","சாலோம்","அல்லேலு","ஒசன்னா"]}, answer:1, ref:"Hebrew vocabulary" },
+    { en:{q:"Who wrote the majority of the New Testament epistles?",o:["Peter","John","Paul","James"]}, ta:{q:"புதிய ஏற்பாட்டு நிருபங்களில் பெரும்பாலானவற்றை யார் எழுதினார்?",o:["பேதுரு","யோவான்","பவுல்","யாக்கோபு"]}, answer:2, ref:"Bible overview" },
+    { en:{q:"In which book does God speak from a whirlwind?",o:["Psalms","Proverbs","Job","Ecclesiastes"]}, ta:{q:"எந்த புத்தகத்தில் தேவன் சுழற்காற்றிலிருந்து பேசுகிறார்?",o:["சங்கீதம்","நீதிமொழிகள்","யோபு","பிரசங்கி"]}, answer:2, ref:"Job 38:1" },
+    { en:{q:"What was the name of Abraham s father?",o:["Nahor","Terah","Haran","Shem"]}, ta:{q:"ஆபிரகாமின் தகப்பனின் பெயர் என்ன?",o:["நாகோர்","தேரா","ஆரான்","சேம்"]}, answer:1, ref:"Genesis 11:26" },
+    { en:{q:"How many days and nights did Elijah travel to reach Mount Horeb?",o:["7","14","40","21"]}, ta:{q:"ஏலியா ஓரேப் மலையை அடைய எத்தனை நாள் இரவு பயணம் செய்தார்?",o:["7","14","40","21"]}, answer:2, ref:"1 Kings 19:8" },
+    { en:{q:"Who was the Roman governor who sentenced Jesus to death?",o:["Herod","Felix","Festus","Pilate"]}, ta:{q:"இயேசுவுக்கு மரண தண்டனை விதித்த ரோமன் ஆளுநர் யார்?",o:["ஏரோது","பேலிக்ஸ்","பெஸ்து","பிலாத்து"]}, answer:3, ref:"John 19:16" },
+    { en:{q:"What is the last word in the Bible?",o:["Faith","Amen","Grace","Lord"]}, ta:{q:"வேதாகமத்தின் கடைசி வார்த்தை என்ன?",o:["விசுவாசம்","ஆமென்","கிருபை","கர்த்தர்"]}, answer:1, ref:"Revelation 22:21" },
+    { en:{q:"Which king had a dream about a statue made of different materials?",o:["Solomon","Pharaoh","Nebuchadnezzar","Darius"]}, ta:{q:"வெவ்வேறு பொருட்களால் செய்யப்பட்ட சிலையைப் பற்றி யாருக்கு கனவு வந்தது?",o:["சாலொமோன்","பார்வோன்","நேபுகத்நேச்சர்","தாரியு"]}, answer:2, ref:"Daniel 2:31" },
+    { en:{q:"What was the name of the prophetess who judged Israel?",o:["Miriam","Huldah","Deborah","Anna"]}, ta:{q:"இஸ்ரவேலை நடுத்தீர்த்த தீர்க்கதரிசி பெண்ணின் பெயர் என்ன?",o:["மிரியாம்","ஹுல்தா","தெபோரா","அன்னாள்"]}, answer:2, ref:"Judges 4:4" },
+    { en:{q:"How many chapters are in the Book of Psalms?",o:["100","120","150","175"]}, ta:{q:"சங்கீத புத்தகத்தில் எத்தனை அதிகாரங்கள் உள்ளன?",o:["100","120","150","175"]}, answer:2, ref:"Book of Psalms" },
+    { en:{q:"Who interpreted Pharaoh s dream?",o:["Moses","Daniel","Joseph","Solomon"]}, ta:{q:"பார்வோனின் கனவை யார் விளக்கினார்?",o:["மோசே","தானியேல்","யோசேப்பு","சாலொமோன்"]}, answer:2, ref:"Genesis 41:15-16" },
+    { en:{q:"What is the first commandment?",o:["Do not murder","Do not steal","You shall have no other gods before Me","Remember the Sabbath"]}, ta:{q:"முதல் கட்டளை என்ன?",o:["கொலை செய்யாதே","திருட வேண்டாம்","என்னையன்றி வேறே தேவர்கள் உனக்கு இருக்கலாகாது","ஓய்வுநாளை நினை"]}, answer:2, ref:"Exodus 20:3" },
+    { en:{q:"Which book of the Bible describes the armor of God?",o:["Romans","Colossians","Ephesians","Philippians"]}, ta:{q:"வேதாகமத்தில் எந்த புத்தகம் தேவனின் ஆயுதவர்க்கத்தை விவரிக்கிறது?",o:["ரோமர்","கொலோசெயர்","எபேசியர்","பிலிப்பியர்"]}, answer:2, ref:"Ephesians 6:11-17" },
+    { en:{q:"Who was the twin brother of Jacob?",o:["Ishmael","Esau","Levi","Judah"]}, ta:{q:"யாக்கோபின் இரட்டை சகோதரன் யார்?",o:["இஸ்மவேல்","ஏசா","லேவி","யூதா"]}, answer:1, ref:"Genesis 25:24-26" },
+    { en:{q:"How old was Methuselah when he died?",o:["777","888","969","999"]}, ta:{q:"மெத்தூசலா இறந்தபோது அவருக்கு எத்தனை வயது?",o:["777","888","969","999"]}, answer:2, ref:"Genesis 5:27" },
+    { en:{q:"What was the name of Moses Ethiopian wife?",o:["Zipporah","Miriam","Deborah","Rahab"]}, ta:{q:"மோசேயின் எத்தியோப்பிய மனைவியின் பெயர் என்ன?",o:["சிப்போரா","மிரியாம்","தெபோரா","ராகாப்"]}, answer:0, ref:"Numbers 12:1" },
+    { en:{q:"Which sea did Moses part?",o:["Dead Sea","Mediterranean Sea","Red Sea","Sea of Galilee"]}, ta:{q:"மோசே எந்த கடலை பிரித்தார்?",o:["மிருத சமுத்திரம்","மத்தியத்தரைக் கடல்","சிவந்த கடல்","கலிலேயா கடல்"]}, answer:2, ref:"Exodus 14:21" },
+    { en:{q:"Which disciple was a tax collector before following Jesus?",o:["Peter","John","Matthew","Simon"]}, ta:{q:"இயேசுவைப் பின்தொடர்வதற்கு முன் எந்த சீடர் வரிவசூலிப்பவராக இருந்தார்?",o:["பேதுரு","யோவான்","மத்தேயு","சீமோன்"]}, answer:2, ref:"Matthew 9:9" },
+    { en:{q:"What was the name of the well where Jesus spoke with the Samaritan woman?",o:["Well of Abraham","Well of Moses","Jacob s Well","Well of Elijah"]}, ta:{q:"இயேசு சமாரிய பெண்ணிடம் பேசிய கிணற்றின் பெயர் என்ன?",o:["ஆபிரகாமின் கிணறு","மோசேயின் கிணறு","யாக்கோபின் கிணறு","எலியாவின் கிணறு"]}, answer:2, ref:"John 4:6" },
+    { en:{q:"Who was the first person in the Bible to get drunk?",o:["Lot","Noah","Samson","Solomon"]}, ta:{q:"வேதாகமத்தில் முதல் முதலில் குடிவெறியடைந்தவர் யார்?",o:["லோத்து","நோவா","சிம்சோன்","சாலொமோன்"]}, answer:1, ref:"Genesis 9:21" },
+    { en:{q:"How many people did Jesus feed with five loaves and two fish?",o:["3000","4000","5000","6000"]}, ta:{q:"இயேசு ஐந்து அப்பங்களாலும் இரண்டு மீன்களாலும் எத்தனை பேருக்கு உணவளித்தார்?",o:["3000","4000","5000","6000"]}, answer:2, ref:"Matthew 14:21" },
+    { en:{q:"What was the name of David s son who rebelled against him?",o:["Solomon","Amnon","Absalom","Adonijah"]}, ta:{q:"தாவீதுக்கு விரோதமாக கிளர்ச்சி செய்த அவருடைய குமாரன் யார்?",o:["சாலொமோன்","அம்னோன்","அப்சலோம்","அத்தோனியா"]}, answer:2, ref:"2 Samuel 15:10" },
+    { en:{q:"Who anointed David as king?",o:["Moses","Elijah","Samuel","Nathan"]}, ta:{q:"தாவீதை ராஜாவாக அபிஷேகம் செய்தவர் யார்?",o:["மோசே","எலியா","சாமுவேல்","நாத்தான்"]}, answer:2, ref:"1 Samuel 16:13" },
+    { en:{q:"Which river turned to blood in the first plague of Egypt?",o:["Nile","Jordan","Euphrates","Tigris"]}, ta:{q:"எகிப்தின் முதல் வாதையில் எந்த நதி இரத்தமாக மாறியது?",o:["நைல்","யோர்தான்","யூப்பிரட்டீஸ்","டைகிரிஸ்"]}, answer:0, ref:"Exodus 7:20" }
+  ]
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let lang = "en", difficulty = "easy", playerName = "";
+let questions = [], currentQ = 0, score = 0, correctCount = 0;
+let timerInterval = null, timeLeft = 0, allScores = [], lbFilter = "all";
+const TIMER  = {easy:30, medium:20, hard:15};
+const POINTS = {easy:100, medium:150, hard:200};
+
+// ── TRANSLATIONS ──────────────────────────────────────────────────────────
+const T = {
+  en:{
+    title:"BIBLE TRIVIA", subtitle:"பைபிள் வினாடி வினா",
+    lblName:"Your Name", lblDiff:"Choose Difficulty",
+    diffEasy:"Easy", diffMed:"Medium", diffHard:"Hard",
+    startBtn:"Begin Quiz", lbBtn:"🏆 Leaderboard",
+    loading:"Preparing your questions...",
+    qCounter:(c,t)=>`Question ${c} / ${t}`,
+    scoreLabel:s=>`Score: ${s}`,
+    next:"Next", correct:"✓ Correct!",
+    wrong:a=>`✗ Answer: ${a}`,
+    playAgain:"Play Again", lbTitle:"🏆 Leaderboard",
+    lbSub:"Top Bible Scholars", lbEmpty:"No scores yet. Be the first!",
+    back:"Back", nameError:"Please enter your name to begin.",
+    resultTitle:s=>s>=800?"Outstanding!":s>=500?"Well Done!":"Keep Studying!",
+    resultSub:(c,t)=>`${c} / ${t} correct`, pts:"pts",
+    tabAll:"All", tabEasy:"Easy", tabMed:"Medium", tabHard:"Hard",
+    ref:"Reference",
+    verse:{
+      good:"\"Your word is a lamp for my feet, a light on my path.\" — Psalm 119:105",
+      mid:"\"Study to show yourself approved to God.\" — 2 Timothy 2:15",
+      low:"\"For the word of God is alive and active.\" — Hebrews 4:12"
+    }
+  },
+  ta:{
+    title:"பைபிள் வினாடி வினா", subtitle:"BIBLE TRIVIA",
+    lblName:"உங்கள் பெயர்", lblDiff:"கஷ்டத்தை தேர்வு செய்யுங்கள்",
+    diffEasy:"எளிது", diffMed:"நடுத்தரம்", diffHard:"கடினம்",
+    startBtn:"விளையாட்டு தொடங்கு", lbBtn:"🏆 தர வரிசை",
+    loading:"கேள்விகளை தயாரிக்கிறோம்...",
+    qCounter:(c,t)=>`கேள்வி ${c} / ${t}`,
+    scoreLabel:s=>`மதிப்பெண்: ${s}`,
+    next:"அடுத்தது", correct:"✓ சரி!",
+    wrong:a=>`✗ சரியான பதில்: ${a}`,
+    playAgain:"மீண்டும் விளையாடு", lbTitle:"🏆 தர வரிசை",
+    lbSub:"சிறந்த வேத அறிஞர்கள்", lbEmpty:"இன்னும் மதிப்பெண் இல்லை!",
+    back:"பின்னால்", nameError:"தொடர உங்கள் பெயரை உள்ளிடவும்.",
+    resultTitle:s=>s>=800?"அற்புதம்!":s>=500?"நன்றாக செய்தீர்கள்!":"மேலும் படிக்கவும்!",
+    resultSub:(c,t)=>`${c} / ${t} சரியான பதில்`, pts:"புள்ளி",
+    tabAll:"அனைத்தும்", tabEasy:"எளிது", tabMed:"நடுத்தரம்", tabHard:"கடினம்",
+    ref:"குறிப்பு",
+    verse:{
+      good:"\"உம்முடைய வார்த்தை என் கால்களுக்கு தீபமாகவும் என் பாதைக்கு வெளிச்சமாகவும் இருக்கிறது.\" — சங்கீதம் 119:105",
+      mid:"\"உன்னை தேவனுக்கு அங்கீகரிக்கப்பட்டவனாக காட்டும்படி ஜாக்கிரதையாயிரு.\" — 2 தீமோத்தேயு 2:15",
+      low:"\"தேவனுடைய வார்த்தை ஜீவனும் வல்லமையும் உள்ளது.\" — எபிரெயர் 4:12"
+    }
+  }
+};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function shuffle(arr){ return arr.sort(()=>Math.random()-0.5); }
+
+window.setLang = function(l){
+  lang=l;
+  document.getElementById("btn-en").classList.toggle("active",l==="en");
+  document.getElementById("btn-ta").classList.toggle("active",l==="ta");
+  const t=T[l];
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  set("main-title",t.title); set("main-subtitle",t.subtitle);
+  set("lbl-name",t.lblName); set("lbl-diff",t.lblDiff);
+  set("diff-easy",t.diffEasy); set("diff-medium",t.diffMed); set("diff-hard",t.diffHard);
+  set("lbl-start-btn",t.startBtn); set("lbl-lb-btn",t.lbBtn);
+  set("lbl-loading",t.loading); set("lbl-next",t.next);
+  set("lbl-play-again",t.playAgain); set("lbl-lb-title",t.lbTitle);
+  set("lbl-lb-sub",t.lbSub); set("lbl-lb-empty",t.lbEmpty); set("lbl-back",t.back);
+  set("tab-easy-lb",t.tabEasy); set("tab-med-lb",t.tabMed); set("tab-hard-lb",t.tabHard);
+  document.getElementById("player-name").placeholder=l==="en"?"Enter your name...":"உங்கள் பெயர்...";
+};
+
+window.selectDiff = function(d,el){
+  difficulty=d;
+  document.querySelectorAll(".diff-btn").forEach(b=>b.classList.remove("selected"));
+  el.classList.add("selected");
+};
+
+window.showScreen = function(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+};
+
+// ── START GAME ────────────────────────────────────────────────────────────
+window.startGame = function(){
+  playerName=document.getElementById("player-name").value.trim();
+  const err=document.getElementById("start-error");
+  if(!playerName){err.textContent=T[lang].nameError;err.classList.add("show");return;}
+  err.classList.remove("show");
+  showScreen("screen-loading");
+  setTimeout(()=>{
+    const pool=shuffle([...QUESTIONS[difficulty]]).slice(0,10);
+    questions=pool; currentQ=0; score=0; correctCount=0;
+    showScreen("screen-quiz");
+    renderQuestion();
+  },600);
+};
+
+// ── RENDER QUESTION ───────────────────────────────────────────────────────
+function renderQuestion(){
+  const q=questions[currentQ], t=T[lang];
+  const qData=q[lang];
+  document.getElementById("q-counter").textContent=t.qCounter(currentQ+1,questions.length);
+  document.getElementById("score-display").textContent=t.scoreLabel(score);
+  document.getElementById("question-text").textContent=qData.q;
+  document.getElementById("question-ref").textContent="";
+  document.getElementById("feedback-bar").className="feedback-bar";
+  document.getElementById("next-btn-wrap").className="next-btn-wrap";
+  const grid=document.getElementById("options-grid");
+  grid.innerHTML="";
+  ["A","B","C","D"].forEach((letter,i)=>{
+    const btn=document.createElement("button");
+    btn.className="option-btn";
+    btn.innerHTML=`<span class="opt-letter">${letter}</span><span>${qData.o[i]}</span>`;
+    btn.onclick=()=>selectAnswer(i);
+    grid.appendChild(btn);
+  });
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timeLeft=TIMER[difficulty];
+  document.getElementById("timer-bar").style.width="100%";
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    document.getElementById("timer-bar").style.width=(timeLeft/TIMER[difficulty]*100)+"%";
+    if(timeLeft<=0){clearInterval(timerInterval);selectAnswer(-1);}
+  },1000);
+}
+
+function selectAnswer(chosen){
+  clearInterval(timerInterval);
+  const q=questions[currentQ], t=T[lang], qData=q[lang];
+  const btns=document.querySelectorAll(".option-btn");
+  btns.forEach(b=>b.disabled=true);
+  btns[q.answer].classList.add("correct");
+  if(chosen>=0&&chosen!==q.answer)btns[chosen].classList.add("wrong");
+  const ok=chosen===q.answer;
+  if(ok){score+=POINTS[difficulty]+Math.floor((timeLeft/TIMER[difficulty])*POINTS[difficulty]);correctCount++;}
+  const fb=document.getElementById("feedback-bar");
+  fb.innerHTML=(ok?t.correct:t.wrong(qData.o[q.answer]))+` <span style="opacity:0.7;font-size:11px;margin-left:8px">📖 ${q.ref}</span>`;
+  fb.className="feedback-bar show "+(ok?"correct":"wrong");
+  document.getElementById("score-display").textContent=t.scoreLabel(score);
+  document.getElementById("next-btn-wrap").className="next-btn-wrap show";
+  document.getElementById("lbl-next").textContent=
+    currentQ<questions.length-1?t.next:(lang==="en"?"Finish ✓":"முடி ✓");
+}
+
+window.nextQuestion=function(){
+  currentQ++;
+  currentQ>=questions.length?endGame():renderQuestion();
+};
+
+// ── END GAME ──────────────────────────────────────────────────────────────
+async function endGame(){
+  clearInterval(timerInterval);
+  const t=T[lang];
+  showScreen("screen-result");
+  document.getElementById("result-crown").textContent=score>=800?"🏆":score>=500?"⭐":"📖";
+  document.getElementById("result-title").textContent=t.resultTitle(score);
+  document.getElementById("result-score").textContent=score+" "+t.pts;
+  document.getElementById("result-sub").textContent=t.resultSub(correctCount,questions.length);
+  const vk=score>=800?"good":score>=500?"mid":"low";
+  document.getElementById("result-verse").textContent=t.verse[vk];
+  await saveScore();
+}
+
+// ── FIREBASE ──────────────────────────────────────────────────────────────
+async function saveScore(){
+  try{
+    await addDoc(collection(db,"leaderboard"),{
+      name:playerName,score,correct:correctCount,
+      total:questions.length,difficulty,lang,
+      date:new Date().toLocaleDateString(),
+      createdAt:serverTimestamp()
+    });
+  }catch(e){console.error("Save failed:",e);}
+}
+
+window.showLeaderboard=async function(){
+  showScreen("screen-leaderboard");
+  document.getElementById("lb-list").innerHTML=
+    "<div class=\"lb-empty\"><div class=\"spinner\" style=\"width:24px;height:24px;margin:0 auto 8px;border-width:2px\"></div></div>";
+  try{
+    const q=query(collection(db,"leaderboard"),orderBy("score","desc"),limit(100));
+    const snap=await getDocs(q);
+    allScores=snap.docs.map(d=>d.data());
+  }catch(e){allScores=[];}
+  renderLB();
+};
+
+window.filterLB=function(f,el){
+  lbFilter=f;
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
+  renderLB();
+};
+
+function renderLB(){
+  const t=T[lang];
+  const filtered=lbFilter==="all"?allScores:allScores.filter(s=>s.difficulty===lbFilter);
+  const list=document.getElementById("lb-list");
+  if(!filtered.length){list.innerHTML=`<div class="lb-empty">${t.lbEmpty}</div>`;return;}
+  const medals=["🥇","🥈","🥉"],rc=["top-1","top-2","top-3"],rk=["gold","silver","bronze"];
+  list.innerHTML=filtered.slice(0,20).map((s,i)=>`
+    <div class="lb-item ${rc[i]||""}">
+      <div class="lb-rank ${rk[i]||""}">${medals[i]||(i+1)}</div>
+      <div style="flex:1">
+        <div class="lb-name">${s.name}</div>
+        <div class="lb-meta">${s.correct}/${s.total} &middot; ${s.difficulty} &middot; ${s.date}</div>
+      </div>
+      <div class="lb-score">${s.score}</div>
+    </div>`).join("");
+}
+
+window.resetGame=function(){showScreen("screen-start");};
+</script>
