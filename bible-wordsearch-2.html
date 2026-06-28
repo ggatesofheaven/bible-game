@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Bible Word Search</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:#f0f4f8;padding:12px;min-height:100vh;}
+.wrap{max-width:580px;margin:0 auto;}
+.header{background:linear-gradient(135deg,#E76D80,#c45a6a);border-radius:18px;padding:20px;text-align:center;margin-bottom:14px;position:relative;box-shadow:0 4px 20px rgba(231,109,128,0.3);}
+.htitle{font-size:24px;font-weight:800;color:white;letter-spacing:1px;}
+.hsub{font-size:13px;color:rgba(255,255,255,0.85);margin-top:3px;}
+.ltog{position:absolute;top:14px;right:14px;display:flex;gap:4px;}
+.lbtn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.5);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer;}
+.lbtn.on{background:white;color:#E76D80;}
+.card{background:white;border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.08);margin-bottom:12px;}
+.scr{display:none;}.scr.on{display:block;}
+.flabel{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
+.tinput{width:100%;padding:11px 14px;border:2px solid #eee;border-radius:10px;font-size:15px;font-family:'Nunito',sans-serif;outline:none;}
+.tinput:focus{border-color:#E76D80;}
+.dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.dcard{border:2px solid #eee;border-radius:12px;padding:12px 6px;text-align:center;cursor:pointer;background:white;transition:all 0.15s;}
+.dcard.on{border-color:#E76D80;background:#fff5f6;}
+.dicon{font-size:22px;display:block;margin-bottom:4px;}
+.dname{font-size:13px;font-weight:700;color:#888;}
+.dcard.on .dname{color:#E76D80;}
+.dinfo{font-size:10px;color:#bbb;margin-top:2px;}
+.btnpink{width:100%;padding:14px;background:linear-gradient(135deg,#E76D80,#d45e70);color:white;font-family:'Nunito',sans-serif;font-size:16px;font-weight:700;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 12px rgba(231,109,128,0.3);}
+.btnout{display:block;width:100%;padding:10px;background:white;color:#E76D80;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;border:2px solid #E76D80;border-radius:10px;cursor:pointer;text-align:center;}
+.errmsg{color:#E76D80;font-size:12px;text-align:center;margin-top:6px;display:none;}
+.errmsg.on{display:block;}
+/* GAME */
+.gmeta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.tbadge{background:linear-gradient(135deg,#E76D80,#c45a6a);color:white;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;}
+.timer{background:#f8f8f8;color:#666;font-size:13px;font-weight:700;padding:5px 14px;border-radius:20px;border:2px solid #eee;}
+.timer.red{border-color:#E76D80;color:#E76D80;}
+.progwrap{background:#f0f4f8;border-radius:8px;height:7px;margin-bottom:8px;overflow:hidden;}
+.progbar{height:100%;background:linear-gradient(90deg,#E76D80,#c45a6a);border-radius:8px;transition:width 0.3s;width:0%;}
+.progtxt{font-size:11px;color:#aaa;text-align:center;margin-bottom:12px;}
+.wlist{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;}
+.wchip{background:#f0f4f8;border:2px solid #e0e8f0;border-radius:7px;padding:3px 9px;font-size:11px;font-weight:700;color:#777;}
+.wchip.done{background:#e8f5e9;border-color:#4caf50;color:#2e7d32;text-decoration:line-through;}
+.gridwrap{overflow-x:auto;text-align:center;margin-bottom:12px;}
+.grid{display:inline-grid;gap:2px;-webkit-user-select:none;user-select:none;}
+.cell{width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border-radius:6px;cursor:pointer;background:#f8f9fa;border:1px solid #e9ecef;color:#333;-webkit-tap-highlight-color:transparent;}
+.cell.sel{background:#E76D80;color:white;border-color:#E76D80;}
+.cell.found{background:#4caf50;color:white;border-color:#4caf50;}
+/* LOADING */
+.ldstate{text-align:center;padding:40px 20px;}
+.spin{width:36px;height:36px;border:3px solid #f0f4f8;border-top-color:#E76D80;border-radius:50%;animation:sp 0.8s linear infinite;margin:0 auto 12px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.ldtxt{color:#aaa;font-size:14px;}
+/* RESULT */
+.remoji{font-size:54px;text-align:center;margin-bottom:8px;}
+.rtitle{font-size:22px;font-weight:800;color:#333;text-align:center;}
+.rscore{font-size:40px;font-weight:800;color:#E76D80;text-align:center;margin:8px 0 4px;}
+.rsub{text-align:center;color:#aaa;font-size:13px;margin-bottom:14px;}
+.rverse{background:#fff5f6;border:2px solid #ffd0d8;border-radius:12px;padding:14px;font-size:13px;color:#888;line-height:1.6;text-align:center;font-style:italic;margin-bottom:14px;}
+.ract{display:flex;gap:8px;}
+.ract .btnpink{flex:1;margin:0;}
+/* LB */
+.lbtitle{font-size:18px;font-weight:800;color:#333;text-align:center;margin-bottom:4px;}
+.lbsub{font-size:12px;color:#aaa;text-align:center;margin-bottom:14px;}
+.lbtabs{display:flex;gap:6px;margin-bottom:12px;}
+.lbtab{flex:1;padding:7px;border-radius:8px;border:2px solid #eee;background:white;font-size:11px;font-weight:700;color:#aaa;cursor:pointer;}
+.lbtab.on{background:#E76D80;color:white;border-color:#E76D80;}
+.lblist{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;}
+.lbitem{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8f9fa;border-radius:10px;border:2px solid #eee;}
+.lbrank{font-size:14px;font-weight:800;width:24px;text-align:center;flex-shrink:0;}
+.lbname{flex:1;font-weight:700;font-size:13px;}
+.lbmeta{font-size:10px;color:#aaa;}
+.lbsc{font-weight:800;font-size:14px;color:#E76D80;}
+.lbempty{text-align:center;color:#aaa;padding:20px;font-size:13px;}
+.mtop{margin-top:10px;}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="ltog">
+      <button class="lbtn on" id="ben">EN</button>
+      <button class="lbtn" id="bta">&#x0BA4;</button>
+    </div>
+    <div class="htitle" id="htitle">BIBLE WORD SEARCH</div>
+    <div class="hsub" id="hsub">Find the Hidden Bible Words</div>
+  </div>
+
+  <!-- START -->
+  <div class="card scr on" id="s-start">
+    <div style="margin-bottom:14px;">
+      <div class="flabel" id="lname">Your Name</div>
+      <input class="tinput" id="pname" type="text" maxlength="24"/>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div class="flabel" id="ldiff">Choose Difficulty</div>
+      <div class="dgrid">
+        <div class="dcard on" id="d-easy">
+          <span class="dicon">&#x1F331;</span>
+          <div class="dname" id="dn-easy">Easy</div>
+          <div class="dinfo">8x8 grid</div>
+        </div>
+        <div class="dcard" id="d-medium">
+          <span class="dicon">&#x1F33F;</span>
+          <div class="dname" id="dn-med">Medium</div>
+          <div class="dinfo">10x10 grid</div>
+        </div>
+        <div class="dcard" id="d-hard">
+          <span class="dicon">&#x1F332;</span>
+          <div class="dname" id="dn-hard">Hard</div>
+          <div class="dinfo">12x12 grid</div>
+        </div>
+      </div>
+    </div>
+    <button class="btnpink" id="bstart">Find the Words!</button>
+    <button class="btnout" id="blb">&#x1F3C6; Leaderboard</button>
+    <div class="errmsg" id="errmsg">Please enter your name!</div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="card scr" id="s-load">
+    <div class="ldstate">
+      <div class="spin"></div>
+      <div class="ldtxt" id="ltxt">Building your puzzle...</div>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div class="scr" id="s-game">
+    <div class="card">
+      <div class="gmeta">
+        <div class="tbadge" id="theme-lbl">Theme</div>
+        <div class="timer" id="timer-lbl">5:00</div>
+      </div>
+      <div class="progwrap"><div class="progbar" id="progbar"></div></div>
+      <div class="progtxt" id="progtxt">0 / 0 words found</div>
+      <div class="wlist" id="wlist"></div>
+    </div>
+    <div class="card">
+      <div class="gridwrap"><div class="grid" id="maingrid"></div></div>
+    </div>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="btnout" id="bgiveup">Give Up</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="card scr" id="s-result">
+    <div class="remoji" id="remoji">&#x1F389;</div>
+    <div class="rtitle" id="rtitle">Well Done!</div>
+    <div class="rscore" id="rscore">0 pts</div>
+    <div class="rsub" id="rsub"></div>
+    <div class="rverse" id="rverse"></div>
+    <div class="ract">
+      <button class="btnout" id="blb2" style="width:auto;padding:10px 16px;">&#x1F3C6;</button>
+      <button class="btnpink" id="bagain">Play Again</button>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="card scr" id="s-lb">
+    <div class="lbtitle" id="lbtitle">&#x1F3C6; Leaderboard</div>
+    <div class="lbsub" id="lbsub">Top Word Searchers</div>
+    <div class="lbtabs">
+      <button class="lbtab on" id="tab-all">All</button>
+      <button class="lbtab" id="tab-easy">Easy</button>
+      <button class="lbtab" id="tab-med">Medium</button>
+      <button class="lbtab" id="tab-hard">Hard</button>
+    </div>
+    <div class="lblist" id="lblist"><div class="lbempty">No scores yet!</div></div>
+    <div class="mtop"><button class="btnout" id="bback">&#8592; Back</button></div>
+  </div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyB2HZNkZQzNGKPizROjTjY2ShofgPvl1BA",
+  authDomain:"bible-trivia-game-4751e.firebaseapp.com",
+  projectId:"bible-trivia-game-4751e",
+  storageBucket:"bible-trivia-game-4751e.firebasestorage.app",
+  messagingSenderId:"546969570212",
+  appId:"1:546969570212:web:0437f7881381e943724f31"
+});
+
+var THEMES=[
+  {en:"Disciples of Jesus",ta:"\u0B87\u0BAF\u0BC7\u0B9A\u0BC1\u0BB5\u0BBF\u0BA9\u0BCD \u0B9A\u0BC0\u0B9F\u0BB0\u0BCD\u0B95\u0BB3\u0BCD",words:["PETER","JOHN","JAMES","ANDREW","PHILIP","THOMAS","MATTHEW","SIMON","JUDAS"]},
+  {en:"Bible Places",ta:"\u0BAA\u0BC8\u0BAA\u0BBF\u0BB3\u0BCD \u0B87\u0B9F\u0B99\u0BCD\u0B95\u0BB3\u0BCD",words:["JERUSALEM","BETHLEHEM","NAZARETH","GALILEE","JORDAN","EGYPT","JERICHO","SINAI","BETHANY","CALVARY"]},
+  {en:"Fruits of the Spirit",ta:"\u0B86\u0BB5\u0BBF\u0BAF\u0BBF\u0BA9\u0BCD \u0B95\u0BA9\u0BBF\u0B95\u0BB3\u0BCD",words:["LOVE","JOY","PEACE","PATIENCE","KINDNESS","GOODNESS","FAITHFULNESS","GENTLENESS","GRACE","MERCY"]},
+  {en:"Bible Women",ta:"\u0BAA\u0BC8\u0BAA\u0BBF\u0BB3\u0BCD \u0BAA\u0BC6\u0BA3\u0BCD\u0B95\u0BB3\u0BCD",words:["MARY","RUTH","ESTHER","DEBORAH","SARAH","RACHEL","LEAH","MIRIAM","HANNAH","NAOMI"]},
+  {en:"Old Testament Kings",ta:"\u0BAA\u0BB4\u0BC8\u0BAF \u0B8F\u0BB1\u0BCD\u0BAA\u0BBE\u0B9F\u0BCD\u0B9F\u0BC1 \u0BB0\u0BBE\u0B9C\u0BBE\u0B95\u0BCD\u0B95\u0BB3\u0BCD",words:["SAUL","DAVID","SOLOMON","REHOBOAM","AHAB","HEZEKIAH","JOSIAH","UZZIAH"]},
+  {en:"Books of Prophets",ta:"\u0BA4\u0BC0\u0BB0\u0BCD\u0B95\u0BCD\u0B95\u0BA4\u0BB0\u0BBF\u0B9A\u0BBF\u0B95\u0BB3\u0BBF\u0BA9\u0BCD \u0BAA\u0BC1\u0BA4\u0BCD\u0BA4\u0B95\u0B99\u0BCD\u0B95\u0BB3\u0BCD",words:["ISAIAH","JEREMIAH","EZEKIEL","DANIEL","HOSEA","JOEL","AMOS","JONAH","MICAH","NAHUM"]},
+  {en:"Miracles of Jesus",ta:"\u0B87\u0BAF\u0BC7\u0B9A\u0BC1\u0BB5\u0BBF\u0BA9\u0BCD \u0B85\u0BB1\u0BCD\u0BAA\u0BC1\u0BA4\u0B99\u0BCD\u0B95\u0BB3\u0BCD",words:["HEALING","WALKING","FEEDING","RAISING","CALMING","LAZARUS","WINE","SIGHT","LEPROSY"]},
+  {en:"Books of Moses",ta:"\u0BAE\u0BCB\u0B9A\u0BC7\u0BAF\u0BBி\u0BA9\u0BCD \u0BAA\u0BC1\u0BA4\u0BCD\u0BA4\u0B95\u0B99\u0BCD\u0B95\u0BB3\u0BCD",words:["GENESIS","EXODUS","LEVITICUS","NUMBERS","DEUTERONOMY","MOSES","AARON","SINAI","MANNA","CANAAN"]}
+];
+
+var GSIZES={easy:8,medium:10,hard:12};
+var TIMERS={easy:300,medium:420,hard:600};
+var WCOUNTS={easy:6,medium:8,hard:10};
+
+var lang="en",diff="easy",pname="";
+var grid=[],gsize=8,words=[],placed=[],found=[];
+var sel=false,startCell=null,curCells=[];
+var timerInt=null,timeLeft=0,score=0;
+var allScores=[],lbFilter="all",curTheme=null;
+
+var T={
+  en:{
+    htitle:"BIBLE WORD SEARCH",hsub:"Find the Hidden Bible Words",
+    lname:"Your Name",ldiff:"Choose Difficulty",
+    easy:"Easy",med:"Medium",hard:"Hard",
+    start:"Find the Words!",lb:"\uD83C\uDFC6 Leaderboard",
+    loading:"Building your puzzle...",
+    prog:function(f,t){return f+" / "+t+" words found";},
+    giveup:"Give Up",again:"Play Again",
+    lbtitle:"\uD83C\uDFC6 Leaderboard",lbsub:"Top Word Searchers",
+    back:"\u2190 Back",err:"Please enter your name!",
+    rtitle:function(f,t){return f===t?"All Found! \u2B50":f>t/2?"Good Job!":"Keep Trying!";},
+    rsub:function(f,t,s){return f+" of "+t+" words \u00B7 "+s+" pts";},
+    pts:"pts",taball:"All",tabeasy:"Easy",tabmed:"Medium",tabhard:"Hard",
+    verse:{great:"\"Seek and you will find.\" \u2014 Matthew 7:7",good:"\"Your word is a lamp to my feet.\" \u2014 Psalm 119:105",low:"\"The word of God is alive and active.\" \u2014 Hebrews 4:12"}
+  },
+  ta:{
+    htitle:"\u0BAA\u0BC8\u0BAA\u0BBF\u0BB3\u0BCD \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8 \u0BA4\u0BC7\u0B9F\u0BBF",hsub:"\u0BAE\u0BB1\u0BC8\u0BA8\u0BCD\u0BA4 \u0BAA\u0BC8\u0BAA\u0BBF\u0BB3\u0BCD \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8\u0B95\u0BB3\u0BC8 \u0B95\u0BA3\u0BCD\u0B9F\u0BC1\u0BAA\u0BBF\u0B9F\u0BBF",
+    lname:"\u0B89\u0B99\u0BCD\u0B95\u0BB3\u0BCD \u0BAA\u0BC6\u0BAF\u0BB0\u0BCD",ldiff:"\u0B95\u0B9E\u0BCD\u0B9A\u0BBF\u0BA4\u0BCD\u0BA4\u0BC8 \u0BA4\u0BC7\u0BB0\u0BCD\u0BB5\u0BC1",
+    easy:"\u0B8E\u0BB3\u0BBF\u0BA4\u0BC1",med:"\u0BA8\u0B9F\u0BC1\u0BA4\u0BCD\u0BA4\u0BB0\u0BAE\u0BCD",hard:"\u0B95\u0B9F\u0BBF\u0BA9\u0BAE\u0BCD",
+    start:"\u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8\u0B95\u0BB3\u0BC8 \u0BA4\u0BC7\u0B9F\u0BC1!",lb:"\uD83C\uDFC6 \u0BA4\u0BB0 \u0BB5\u0BB0\u0BBF\u0B9A\u0BC8",
+    loading:"\u0BAA\u0BC1\u0BA4\u0BBF\u0BB0\u0BCD \u0B89\u0BB0\u0BC1\u0BB5\u0BBE\u0B95\u0BC1\u0B95\u0BBF\u0BB1\u0BCB\u0BAE\u0BCD...",
+    prog:function(f,t){return f+" / "+t+" \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8\u0B95\u0BB3\u0BCD \u0B95\u0BA3\u0BCD\u0B9F\u0BC1\u0BAA\u0BBF\u0B9F\u0BBF\u0BA4\u0BCD\u0BA4\u0BC1";},
+    giveup:"\u0BB5\u0BBF\u0B9F\u0BC1",again:"\u0BAE\u0BC0\u0BA3\u0BCD\u0B9F\u0BC1\u0BAE\u0BCD \u0BB5\u0BBF\u0BB3\u0BC8\u0BAF\u0BBE\u0B9F\u0BC1",
+    lbtitle:"\uD83C\uDFC6 \u0BA4\u0BB0 \u0BB5\u0BB0\u0BBF\u0B9A\u0BC8",lbsub:"\u0B9A\u0BBF\u0BB1\u0BA8\u0BCD\u0BA4 \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8 \u0BA4\u0BC7\u0B9F\u0BC1\u0BAA\u0BB5\u0BB0\u0BCD\u0B95\u0BB3\u0BCD",
+    back:"\u2190 \u0BAA\u0BBF\u0BA9\u0BCD\u0BA9\u0BBE\u0BB2\u0BCD",err:"\u0B89\u0B99\u0BCD\u0B95\u0BB3\u0BCD \u0BAA\u0BC6\u0BAF\u0BB0\u0BC8 \u0B89\u0BB3\u0BCD\u0BB3\u0BBF\u0B9F\u0BB5\u0BC1\u0BAE\u0BCD!",
+    rtitle:function(f,t){return f===t?"\u0B85\u0BA9\u0BC8\u0BA4\u0BCD\u0BA4\u0BC1\u0BAE\u0BCD \u0B95\u0BA3\u0BCD\u0B9F\u0BC1\u0BAA\u0BBF\u0B9F\u0BBி\u0BA4\u0BCD\u0BA4\u0BB0\u0BCD!":f>t/2?"\u0BA8\u0BA9\u0BCD\u0BB1\u0BBE\u0B95 \u0B9A\u0BC6\u0BAF\u0BCD\u0BA4\u0BC0\u0BB0\u0BCD\u0B95\u0BB3\u0BCD!":"\u0BAE\u0BC7\u0BB2\u0BC1\u0BAE\u0BCD \u0BAA\u0B9F\u0BBF\u0BAF\u0BC1\u0B99\u0BCD\u0B95\u0BB3\u0BCD!";},
+    rsub:function(f,t,s){return f+" / "+t+" \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8\u0B95\u0BB3\u0BCD \u00B7 "+s+" \u0BAA\u0BC1\u0BB3\u0BCD\u0BB3\u0BBி";},
+    pts:"\u0BAA\u0BC1\u0BB3\u0BCD\u0BB3\u0BBி",taball:"\u0B85\u0BA9\u0BC8\u0BA4\u0BCD\u0BA4\u0BC1\u0BAE\u0BCD",tabeasy:"\u0B8E\u0BB3\u0BBி\u0BA4\u0BC1",tabmed:"\u0BA8\u0B9F\u0BC1\u0BA4\u0BCD\u0BA4\u0BB0\u0BAE\u0BCD",tabhard:"\u0B95\u0B9F\u0BBி\u0BA9\u0BAE\u0BCD",
+    verse:{great:"\"\u0BA4\u0BC7\u0B9F\u0BC1\u0B99\u0BCD\u0B95\u0BB3\u0BCD, \u0B95\u0BBE\u0BA3\u0BCD\u0BAA\u0BC0\u0BB0\u0BCD\u0B95\u0BB3\u0BCD.\" \u2014 \u0BAE\u0BA4\u0BCD\u0BA4\u0BC7\u0BAF\u0BC1 7:7",good:"\"\u0B89\u0BAE\u0BCD\u0BAE\u0BC1\u0B9F\u0BC8\u0BAF \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8 \u0B8E\u0BA9\u0BCD \u0B95\u0BBE\u0BB2\u0BCD\u0B95\u0BB3\u0BC1\u0B95\u0BCD\u0B95\u0BC1 \u0BA4\u0BC0\u0BAA\u0BAE\u0BBE\u0B95\u0BB5\u0BC1\u0BAE\u0BCD.\" \u2014 \u0B9A\u0B99\u0BCD\u0B95\u0BC0\u0BA4\u0BAE\u0BCD 119:105",low:"\"\u0BA4\u0BC7\u0BB5\u0BA9\u0BC1\u0B9F\u0BC8\u0BAF \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8 \u0B9C\u0BC0\u0BB5\u0BA9\u0BC1\u0BAE\u0BCD \u0BB5\u0BB2\u0BCD\u0BB2\u0BAE\u0BC8\u0BAF\u0BC1\u0BAE\u0BCD \u0B89\u0BB3\u0BCD\u0BB3\u0BA4\u0BC1.\" \u2014 \u0B8E\u0BAA\u0BBி\u0BB0\u0BC7\u0BAF\u0BB0\u0BCD 4:12"}
+  }
+};
+
+function g(id){return document.getElementById(id);}
+function show(id){document.querySelectorAll(".scr").forEach(function(s){s.classList.remove("on");});g(id).classList.add("on");}
+
+function setLang(l){
+  lang=l;
+  g("ben").classList.toggle("on",l==="en");
+  g("bta").classList.toggle("on",l==="ta");
+  var t=T[l];
+  g("htitle").textContent=t.htitle;
+  g("hsub").textContent=t.hsub;
+  g("lname").textContent=t.lname;
+  g("ldiff").textContent=t.ldiff;
+  g("dn-easy").textContent=t.easy;
+  g("dn-med").textContent=t.med;
+  g("dn-hard").textContent=t.hard;
+  g("bstart").textContent=t.start;
+  g("blb").textContent=t.lb;
+  g("ltxt").textContent=t.loading;
+  g("bgiveup").textContent=t.giveup;
+  g("bagain").textContent=t.again;
+  g("lbtitle").textContent=t.lbtitle;
+  g("lbsub").textContent=t.lbsub;
+  g("bback").textContent=t.back;
+  g("tab-all").textContent=t.taball;
+  g("tab-easy").textContent=t.tabeasy;
+  g("tab-med").textContent=t.tabmed;
+  g("tab-hard").textContent=t.tabhard;
+  g("pname").placeholder=l==="en"?"Enter your name...":"\u0B89\u0B99\u0BCD\u0B95\u0BB3\u0BCD \u0BAA\u0BC6\u0BAF\u0BB0\u0BCD...";
+}
+
+function setDiff(d){
+  diff=d;
+  ["easy","medium","hard"].forEach(function(x){g("d-"+x).classList.remove("on");});
+  g("d-"+d).classList.add("on");
+}
+
+// Grid
+function mkGrid(){
+  gsize=GSIZES[diff]; grid=[];
+  for(var r=0;r<gsize;r++){grid.push([]);for(var c=0;c<gsize;c++)grid[r].push("");}
+}
+
+function canPlace(w,r,c,dr,dc){
+  for(var i=0;i<w.length;i++){
+    var nr=r+dr*i,nc=c+dc*i;
+    if(nr<0||nr>=gsize||nc<0||nc>=gsize)return false;
+    if(grid[nr][nc]&&grid[nr][nc]!==w[i])return false;
+  }
+  return true;
+}
+
+function placeWord(w,wi){
+  var dirs=[[0,1],[1,0]];
+  if(diff==="medium")dirs=[[0,1],[1,0],[1,1],[-1,1]];
+  if(diff==="hard")dirs=[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]];
+  for(var a=0;a<200;a++){
+    var d=dirs[Math.floor(Math.random()*dirs.length)];
+    var r=Math.floor(Math.random()*gsize),c=Math.floor(Math.random()*gsize);
+    if(canPlace(w,r,c,d[0],d[1])){
+      var cells=[];
+      for(var i=0;i<w.length;i++){
+        var nr=r+d[0]*i,nc=c+d[1]*i;
+        grid[nr][nc]=w[i];
+        cells.push(nr+","+nc);
+      }
+      placed.push({w:w,cells:cells});
+      return true;
+    }
+  }
+  return false;
+}
+
+function fillGrid(){
+  var L="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for(var r=0;r<gsize;r++)for(var c=0;c<gsize;c++)if(!grid[r][c])grid[r][c]=L[Math.floor(Math.random()*26)];
+}
+
+function buildPuzzle(){
+  mkGrid(); placed=[];
+  var th=THEMES[Math.floor(Math.random()*THEMES.length)];
+  curTheme=th;
+  var cnt=WCOUNTS[diff];
+  var pool=th.words.slice().sort(function(){return Math.random()-0.5;});
+  words=[];
+  for(var i=0;i<pool.length&&words.length<cnt;i++){
+    var w=pool[i].toUpperCase();
+    if(w.length<=gsize&&placeWord(w,words.length))words.push(w);
+  }
+  fillGrid(); found=[];
+}
+
+function renderGrid(){
+  var el=g("maingrid");
+  el.style.gridTemplateColumns="repeat("+gsize+",1fr)";
+  el.innerHTML="";
+  var cs=diff==="hard"?"26px":diff==="medium"?"28px":"32px";
+  var fs=diff==="hard"?"11px":"13px";
+  for(var r=0;r<gsize;r++){
+    for(var c=0;c<gsize;c++){
+      var d=document.createElement("div");
+      d.className="cell";
+      d.style.width=cs;d.style.height=cs;d.style.fontSize=fs;
+      d.textContent=grid[r][c];
+      d.dataset.r=r;d.dataset.c=c;
+      el.appendChild(d);
+    }
+  }
+  el.addEventListener("mousedown",onDown);
+  el.addEventListener("mouseover",onOver);
+  document.addEventListener("mouseup",onUp);
+  el.addEventListener("touchstart",onTDown,{passive:false});
+  el.addEventListener("touchmove",onTMove,{passive:false});
+  el.addEventListener("touchend",onUp);
+}
+
+function renderWords(){
+  var el=g("wlist"); el.innerHTML="";
+  words.forEach(function(w,i){
+    var d=document.createElement("div");
+    d.className="wchip";d.id="chip"+i;d.textContent=w;
+    el.appendChild(d);
+  });
+}
+
+function updateProg(){
+  var t=T[lang];
+  var pct=(found.length/words.length)*100;
+  g("progbar").style.width=pct+"%";
+  g("progtxt").textContent=t.prog(found.length,words.length);
+}
+
+function cellAt(el){return el&&el.classList.contains("cell")?el:null;}
+function touchCell(e){var t=e.touches[0];var el=document.elementFromPoint(t.clientX,t.clientY);return cellAt(el);}
+
+function onDown(e){var c=cellAt(e.target);if(!c)return;sel=true;startCell=c;curCells=[c];hilite([c]);}
+function onTDown(e){e.preventDefault();var c=touchCell(e);if(!c)return;sel=true;startCell=c;curCells=[c];hilite([c]);}
+function onOver(e){if(!sel||!startCell)return;var c=cellAt(e.target);if(c)updateSel(c);}
+function onTMove(e){e.preventDefault();if(!sel||!startCell)return;var c=touchCell(e);if(c)updateSel(c);}
+function onUp(){if(!sel)return;sel=false;checkWord();clearSel();curCells=[];startCell=null;}
+
+function updateSel(end){
+  var r1=+startCell.dataset.r,c1=+startCell.dataset.c;
+  var r2=+end.dataset.r,c2=+end.dataset.c;
+  var dr=r2-r1,dc=c2-c1;
+  if(dr===0&&dc===0){hilite([startCell]);return;}
+  var sr=dr===0?0:dr>0?1:-1,sc=dc===0?0:dc>0?1:-1;
+  if(dr!==0&&dc!==0&&Math.abs(dr)!==Math.abs(dc)){hilite([startCell]);return;}
+  var steps=Math.max(Math.abs(dr),Math.abs(dc)),cells=[];
+  for(var i=0;i<=steps;i++){
+    var el=g("maingrid").querySelector("[data-r='"+(r1+sr*i)+"'][data-c='"+(c1+sc*i)+"']");
+    if(el)cells.push(el);
+  }
+  curCells=cells;hilite(cells);
+}
+
+function hilite(cells){
+  document.querySelectorAll(".cell.sel").forEach(function(c){if(!c.classList.contains("found"))c.classList.remove("sel");});
+  cells.forEach(function(c){if(!c.classList.contains("found"))c.classList.add("sel");});
+}
+
+function clearSel(){document.querySelectorAll(".cell.sel:not(.found)").forEach(function(c){c.classList.remove("sel");});}
+
+function checkWord(){
+  if(curCells.length<2)return;
+  var w=curCells.map(function(c){return c.textContent;}).join("");
+  var rw=w.split("").reverse().join("");
+  var idx=words.indexOf(w); if(idx===-1)idx=words.indexOf(rw);
+  if(idx!==-1&&found.indexOf(idx)===-1){
+    found.push(idx);
+    curCells.forEach(function(c){c.classList.add("found");c.classList.remove("sel");});
+    g("chip"+idx).classList.add("done");
+    score+=100+Math.floor((timeLeft/TIMERS[diff])*100);
+    updateProg();
+    if(found.length===words.length)setTimeout(endGame,600);
+  }
+}
+
+function startTimer(){
+  clearInterval(timerInt); timeLeft=TIMERS[diff]; updTimer();
+  timerInt=setInterval(function(){
+    timeLeft--; updTimer();
+    if(timeLeft<=0){clearInterval(timerInt);endGame();}
+  },1000);
+}
+
+function updTimer(){
+  var m=Math.floor(timeLeft/60),s=timeLeft%60;
+  var el=g("timer-lbl");
+  el.textContent=m+":"+(s<10?"0":"")+s;
+  el.className="timer"+(timeLeft<60?" red":"");
+}
+
+function startGame(){
+  pname=g("pname").value.trim();
+  var err=g("errmsg");
+  if(!pname){err.textContent=T[lang].err;err.classList.add("on");return;}
+  err.classList.remove("on");
+  score=0;
+  show("s-load");
+  setTimeout(function(){
+    buildPuzzle();
+    g("theme-lbl").textContent=lang==="en"?curTheme.en:curTheme.ta;
+    renderGrid(); renderWords(); updateProg(); startTimer();
+    show("s-game");
+  },700);
+}
+
+function endGame(){
+  clearInterval(timerInt);
+  var t=T[lang];
+  show("s-result");
+  var pct=found.length/words.length;
+  g("remoji").textContent=pct===1?"\u2B50":pct>0.5?"\uD83D\uDC4D":"\uD83D\uDCDA";
+  g("rtitle").textContent=t.rtitle(found.length,words.length);
+  g("rscore").textContent=score+" "+t.pts;
+  g("rsub").textContent=t.rsub(found.length,words.length,score);
+  var vk=pct===1?"great":pct>0.5?"good":"low";
+  g("rverse").textContent=t.verse[vk];
+  saveScore();
+}
+
+function saveScore(){
+  try{firebase.firestore().collection("wordsearch").add({
+    name:pname,score:score,found:found.length,total:words.length,
+    difficulty:diff,lang:lang,theme:curTheme.en,
+    date:new Date().toLocaleDateString(),
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  });}catch(e){}
+}
+
+function showLB(){
+  show("s-lb");
+  g("lblist").innerHTML="<div class='lbempty'><div class='spin' style='width:20px;height:20px;border-width:2px;margin:0 auto 8px;'></div></div>";
+  firebase.firestore().collection("wordsearch").orderBy("score","desc").limit(100).get()
+    .then(function(s){allScores=s.docs.map(function(d){return d.data();});renderLB();})
+    .catch(function(){allScores=[];renderLB();});
+}
+
+function setTab(f,el){
+  lbFilter=f;
+  document.querySelectorAll(".lbtab").forEach(function(b){b.classList.remove("on");});
+  el.classList.add("on");
+  renderLB();
+}
+
+function renderLB(){
+  var filtered=lbFilter==="all"?allScores:allScores.filter(function(s){return s.difficulty===lbFilter;});
+  var el=g("lblist");
+  if(!filtered.length){el.innerHTML="<div class='lbempty'>"+T[lang].lbsub+"</div>";return;}
+  var m=["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"];
+  el.innerHTML=filtered.slice(0,20).map(function(s,i){
+    return "<div class='lbitem'><div class='lbrank'>"+(m[i]||(i+1))+"</div><div style='flex:1'><div class='lbname'>"+s.name+"</div><div class='lbmeta'>"+s.found+"/"+s.total+" \u00B7 "+s.difficulty+" \u00B7 "+s.date+"</div></div><div class='lbsc'>"+s.score+"</div></div>";
+  }).join("");
+}
+
+// Wire up all buttons
+g("ben").onclick=function(){setLang("en");};
+g("bta").onclick=function(){setLang("ta");};
+g("d-easy").onclick=function(){setDiff("easy");};
+g("d-medium").onclick=function(){setDiff("medium");};
+g("d-hard").onclick=function(){setDiff("hard");};
+g("bstart").onclick=startGame;
+g("blb").onclick=showLB;
+g("bgiveup").onclick=endGame;
+g("bagain").onclick=function(){show("s-start");};
+g("blb2").onclick=showLB;
+g("bback").onclick=function(){show("s-start");};
+g("tab-all").onclick=function(){setTab("all",this);};
+g("tab-easy").onclick=function(){setTab("easy",this);};
+g("tab-med").onclick=function(){setTab("medium",this);};
+g("tab-hard").onclick=function(){setTab("hard",this);};
+</script>
+</body>
+</html>
