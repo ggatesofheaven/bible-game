@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Bible Word Search</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Noto+Sans+Tamil:wght@400;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:#f5f5f5;padding:8px;}
+.wrap{max-width:720px;margin:0 auto;}
+.hdr{background:linear-gradient(135deg,#E76D80,#c45a6a);border-radius:18px;padding:18px;text-align:center;margin-bottom:10px;position:relative;box-shadow:0 4px 14px rgba(231,109,128,.22);}
+.htitle{font-size:22px;font-weight:800;color:white;}
+.hsub{font-size:12px;color:rgba(255,255,255,0.9);margin-top:2px;}
+.ltog{position:absolute;top:12px;right:12px;display:flex;gap:4px;}
+.lbtn{background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.5);color:white;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;cursor:pointer;font-family:'Nunito',sans-serif;}
+.lbtn.on{background:white;color:#E76D80;}
+.card{background:white;border-radius:16px;padding:14px;box-shadow:0 3px 14px rgba(0,0,0,0.08);margin-bottom:8px;}
+.scr{display:none;}.scr.on{display:block;}
+.flbl{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.inp{width:100%;padding:10px 13px;border:2px solid #eee;border-radius:10px;font-size:15px;font-family:'Nunito',sans-serif;outline:none;}
+.inp:focus{border-color:#E76D80;}
+.dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px;}
+.dcard{border:2px solid #eee;border-radius:13px;padding:10px 5px;text-align:center;cursor:pointer;background:white;transition:.18s ease;}
+.dcard.on{border-color:#E76D80;background:#fff0f2;box-shadow:0 3px 10px rgba(231,109,128,.16);}
+.dicon{font-size:20px;display:block;margin-bottom:3px;}
+.dname{font-size:12px;font-weight:700;color:#999;}
+.dcard.on .dname{color:#E76D80;}
+.dinfo{font-size:10px;color:#ccc;margin-top:1px;}
+.btnp{width:100%;padding:13px;background:linear-gradient(135deg,#E76D80,#d45e70);color:white;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:11px;cursor:pointer;margin-bottom:8px;}
+.btno{width:100%;padding:10px;background:white;color:#E76D80;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;border:2px solid #E76D80;border-radius:10px;cursor:pointer;}
+.errmsg{color:#E76D80;font-size:12px;text-align:center;margin-top:5px;display:none;}
+.gm{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.thbadge{background:linear-gradient(135deg,#E76D80,#c45a6a);color:white;font-size:11px;font-weight:800;padding:5px 12px;border-radius:18px;max-width:68%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tmbadge{background:#f5f5f5;color:#666;font-size:13px;font-weight:800;padding:5px 13px;border-radius:18px;border:2px solid #eee;flex-shrink:0;}
+.tmbadge.red{border-color:#E76D80;color:#E76D80;animation:pulse 1s infinite;}@keyframes pulse{50%{transform:scale(1.04);box-shadow:0 0 0 4px rgba(231,109,128,.12);}}
+.pw{background:#f0f4f8;border-radius:8px;height:6px;margin-bottom:7px;overflow:hidden;}
+.pb{height:100%;background:linear-gradient(90deg,#E76D80,#c45a6a);border-radius:8px;transition:width 0.3s;width:0%;}
+.pt{font-size:12px;color:#888;text-align:center;margin-bottom:10px;font-weight:800;line-height:1.45;}
+.wlist{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;justify-content:center;}
+.wchip{background:#f8fbff;border:2px solid #e2eaf2;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;color:#6d6d6d;text-align:center;font-family:'Noto Sans Tamil','Nunito',sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.04);transition:.18s ease;}
+.wchip.done{background:#e8f5e9;border-color:#4caf50;color:#2e7d32;text-decoration:line-through;transform:scale(.96);}
+.gw{overflow:hidden;text-align:center;margin-bottom:8px;width:100%;}
+.grid{display:inline-grid;gap:4px;-webkit-user-select:none;user-select:none;touch-action:none;max-width:100%;}
+.cell{display:flex;align-items:center;justify-content:center;font-weight:800;border-radius:8px;cursor:pointer;background:#fafbfc;border:1px solid #e5e9ef;color:#333;-webkit-tap-highlight-color:transparent;font-family:'Noto Sans Tamil','Nunito',sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.cell.sel{background:#E76D80;color:white;border-color:#E76D80;}
+.cell.found{background:#4caf50;color:white;border-color:#4caf50;box-shadow:0 2px 8px rgba(76,175,80,.22);}
+.ldbox{text-align:center;padding:40px 20px;}
+.spin{width:34px;height:34px;border:3px solid #f0f4f8;border-top-color:#E76D80;border-radius:50%;animation:sp 0.8s linear infinite;margin:0 auto 12px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.ldtxt{color:#aaa;font-size:14px;}
+.remoji{font-size:52px;text-align:center;margin-bottom:6px;}
+.rtit{font-size:21px;font-weight:800;color:#333;text-align:center;}
+.rsc{font-size:38px;font-weight:800;color:#E76D80;text-align:center;margin:8px 0 3px;}
+.rsb{text-align:center;color:#aaa;font-size:12px;margin-bottom:12px;}
+.rv{background:#fff0f2;border:2px solid #ffd0d8;border-radius:11px;padding:12px;font-size:12px;color:#888;line-height:1.6;text-align:center;font-style:italic;margin-bottom:12px;font-family:'Noto Sans Tamil','Nunito',sans-serif;}
+.ract{display:flex;gap:8px;flex-wrap:wrap;}.ract button{min-width:120px;}
+.ract .btnp{flex:1;margin:0;}
+.lbtit{font-size:17px;font-weight:800;color:#333;text-align:center;margin-bottom:3px;}
+.lbsub{font-size:12px;color:#aaa;text-align:center;margin-bottom:12px;}
+.lbtabs{display:flex;gap:5px;margin-bottom:10px;}
+.lbtab{flex:1;padding:6px;border-radius:7px;border:2px solid #eee;background:white;font-size:11px;font-weight:700;color:#aaa;cursor:pointer;font-family:'Nunito',sans-serif;}
+.lbtab.on{background:#E76D80;color:white;border-color:#E76D80;}
+.lblist{display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto;}
+.lbitem{display:flex;align-items:center;gap:9px;padding:9px 11px;background:#f8f9fa;border-radius:9px;border:2px solid #eee;}
+.lbrank{font-size:14px;font-weight:800;width:22px;text-align:center;flex-shrink:0;}
+.lbname{flex:1;font-weight:700;font-size:13px;}
+.lbmeta{font-size:10px;color:#aaa;}
+.lbsc{font-weight:800;font-size:14px;color:#E76D80;}
+.lbempty{text-align:center;color:#aaa;padding:18px;font-size:13px;}
+.mt{margin-top:10px;}
+.lang-note{font-size:10px;color:#aaa;text-align:center;margin-bottom:8px;}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px;}
+.tcard{border:2px solid #eee;border-radius:14px;padding:10px 6px;background:#fff;text-align:center;cursor:pointer;position:relative;transition:.18s ease;min-height:76px;}
+.tcard.on{border-color:#E76D80;background:#fff0f2;box-shadow:0 3px 10px rgba(231,109,128,.15);}
+.tcard.done{border-color:#8acb8c;background:#f1fbf2;}
+.ticon{font-size:20px;display:block;margin-bottom:2px;}
+.tname{font-size:11px;font-weight:800;color:#777;line-height:1.2;font-family:'Noto Sans Tamil','Nunito',sans-serif;}
+.tcheck{position:absolute;top:5px;right:6px;font-size:13px;color:#2e7d32;display:none;}.tcard.done .tcheck{display:block;}
+.small-row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:5px;color:#aaa;font-size:11px;font-weight:800;}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:99;}.confetti i{position:absolute;top:-14px;width:8px;height:14px;background:#E76D80;animation:fall 1.7s linear forwards;border-radius:2px;}@keyframes fall{to{transform:translateY(110vh) rotate(520deg);opacity:.25;}}
+@media(max-width:420px){body{padding:6px}.card{padding:12px}.hdr{padding:16px}.htitle{font-size:20px}.tgrid{grid-template-columns:repeat(2,1fr)}.dgrid{gap:6px}.ract{flex-direction:column}.ract button{width:100%!important;}}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hdr">
+  <div class="ltog">
+    <button class="lbtn on" id="ben">EN</button>
+    <button class="lbtn" id="bta">&#x0BA4;</button>
+  </div>
+  <div class="htitle" id="htitle">BIBLE WORD SEARCH</div>
+  <div class="hsub" id="hsub">Find the Hidden Bible Words</div>
+</div>
+
+<div class="card scr on" id="scr-start">
+  <div style="margin-bottom:12px">
+    <div class="flbl" id="lbl-name">Your Name</div>
+    <input class="inp" id="pname" type="text" maxlength="24"/>
+  </div>
+  <div style="margin-bottom:12px">
+    <div class="flbl" id="lbl-theme">Choose Theme</div>
+    <div class="tgrid" id="theme-grid"></div>
+    <div class="small-row" id="theme-progress-mini">0 / 8 completed</div>
+  </div>
+  <div style="margin-bottom:12px">
+    <div class="flbl" id="lbl-diff">Choose Difficulty</div>
+    <div class="dgrid">
+      <div class="dcard on" id="d-easy"><span class="dicon">&#x1F331;</span><div class="dname" id="dn-easy">Easy</div><div class="dinfo" id="di-easy">6x6</div></div>
+      <div class="dcard" id="d-medium"><span class="dicon">&#x1F33F;</span><div class="dname" id="dn-med">Medium</div><div class="dinfo" id="di-med">8x8</div></div>
+      <div class="dcard" id="d-hard"><span class="dicon">&#x1F332;</span><div class="dname" id="dn-hard">Hard</div><div class="dinfo" id="di-hard">10x10</div></div>
+    </div>
+  </div>
+  <button class="btnp" id="btn-start">Find the Words!</button>
+  <button class="btno" id="btn-lb">&#x1F3C6; Leaderboard</button>
+  <div class="errmsg" id="errmsg">Please enter your name!</div>
+</div>
+
+<div class="card scr" id="scr-load">
+  <div class="ldbox"><div class="spin"></div><div class="ldtxt" id="lbl-load">Building your puzzle...</div></div>
+</div>
+
+<div class="scr" id="scr-game">
+  <div class="card">
+    <div class="gm">
+      <div class="thbadge" id="theme-lbl">Theme</div>
+      <div class="tmbadge" id="timer-lbl">5:00</div>
+    </div>
+    <div class="pw"><div class="pb" id="prog-bar"></div></div>
+    <div class="pt" id="prog-txt">0 / 0 words found</div>
+    <div class="wlist" id="word-list"></div>
+  </div>
+  <div class="card">
+    <div class="lang-note" id="lang-note">Words are hidden left-to-right and top-to-bottom</div>
+    <div class="gw"><div class="grid" id="main-grid"></div></div>
+  </div>
+  <div style="text-align:center;margin-top:6px;">
+    <button class="btno" id="btn-giveup">Give Up</button>
+  </div>
+</div>
+
+<div class="card scr" id="scr-result">
+  <div class="remoji" id="res-emoji">&#x1F389;</div>
+  <div class="rtit" id="res-title">Well Done!</div>
+  <div class="rsc" id="res-score">0 pts</div>
+  <div class="rsb" id="res-sub"></div>
+  <div class="rv" id="res-verse"></div>
+  <div class="ract">
+    <button class="btnp" id="btn-next">Next Theme</button>
+    <button class="btno" id="btn-again">Play Again</button>
+    <button class="btno" id="btn-lb2" style="width:auto;padding:10px 14px;">&#x1F3C6;</button>
+  </div>
+</div>
+
+<div class="card scr" id="scr-lb">
+  <div class="lbtit" id="lbl-lb-title">&#x1F3C6; Leaderboard</div>
+  <div class="lbsub" id="lbl-lb-sub">Top Word Searchers</div>
+  <div class="lbtabs">
+    <button class="lbtab on" id="tab-all">All</button>
+    <button class="lbtab" id="tab-easy">Easy</button>
+    <button class="lbtab" id="tab-med">Medium</button>
+    <button class="lbtab" id="tab-hard">Hard</button>
+  </div>
+  <div class="lblist" id="lb-list"><div class="lbempty">No scores yet!</div></div>
+  <div class="mt"><button class="btno" id="btn-back">&#8592; Back</button></div>
+</div>
+</div>
+
+<script>
+// \u2500\u2500 BILINGUAL THEMES \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// Each word: e=English letters, t=Tamil syllables array
+var THEMES = [
+  {
+    en:"12 Disciples", ta:"\u0B87\u0BAF\u0BC7\u0B9A\u0BC1\u0BB5\u0BBF\u0BA9\u0BCD 12 \u0B9A\u0BC0\u0B9F\u0BB0\u0BCD\u0B95\u0BB3\u0BCD",
+    words:[
+      {e:"PETER",   el:["P","E","T","E","R"],   t:"\u0BAA\u0BC7\u0BA4\u0BC1\u0BB0\u0BC1",   tl:["\u0BAA\u0BC7","\u0BA4\u0BC1","\u0BB0\u0BC1"]},
+      {e:"JOHN",    el:["J","O","H","N"],        t:"\u0BAF\u0BCB\u0BB5\u0BBE\u0BA9\u0BCD",   tl:["\u0BAF\u0BCB","\u0BB5\u0BBE","\u0BA9\u0BCD"]},
+      {e:"JAMES",   el:["J","A","M","E","S"],    t:"\u0BAF\u0BBE\u0B95\u0BCD\u0B95\u0BCB\u0BAA\u0BC1", tl:["\u0BAF\u0BBE","\u0B95\u0BCD","\u0B95\u0BCB","\u0BAA\u0BC1"]},
+      {e:"ANDREW",  el:["A","N","D","R","E","W"],t:"\u0B85\u0BA8\u0BCD\u0BA4\u0BBF\u0BB0\u0BC7\u0BAF\u0BBE", tl:["\u0B85","\u0BA8\u0BCD","\u0BA4\u0BBF","\u0BB0\u0BC7","\u0BAF\u0BBE"]},
+      {e:"PHILIP",  el:["P","H","I","L","I","P"],t:"\u0BAA\u0BBF\u0BB2\u0BBF\u0BAA\u0BCD\u0BAA\u0BC1", tl:["\u0BAA\u0BBF","\u0BB2\u0BBF","\u0BAA\u0BCD","\u0BAA\u0BC1"]},
+      {e:"THOMAS",  el:["T","H","O","M","A","S"],t:"\u0BA4\u0BCB\u0BAE\u0BBE",   tl:["\u0BA4\u0BCB","\u0BAE\u0BBE"]},
+      {e:"MATTHEW", el:["M","A","T","T","H","E","W"],t:"\u0BAE\u0BA4\u0BCD\u0BA4\u0BC7\u0BAF\u0BC1", tl:["\u0BAE","\u0BA4\u0BCD","\u0BA4\u0BC7","\u0BAF\u0BC1"]},
+      {e:"SIMON",   el:["S","I","M","O","N"],    t:"\u0B9A\u0BC0\u0BAE\u0BCB\u0BA9\u0BCD", tl:["\u0B9A\u0BC0","\u0BAE\u0BCB","\u0BA9\u0BCD"]},
+      {e:"JUDAS",   el:["J","U","D","A","S"],    t:"\u0BAF\u0BC2\u0BA4\u0BBE",   tl:["\u0BAF\u0BC2","\u0BA4\u0BBE"]}
+    ]
+  },
+  {
+    en:"Books of Moses", ta:"\u0BAE\u0BCB\u0B9A\u0BC7\u0BAF\u0BBF\u0BA9\u0BCD \u0B90\u0BA8\u0BCD\u0BA4\u0BC1 \u0BAA\u0BC1\u0BA4\u0BCD\u0BA4\u0B95\u0B99\u0BCD\u0B95\u0BB3\u0BCD",
+    words:[
+      {e:"GENESIS",     el:["G","E","N","E","S","I","S"],    t:"\u0B86\u0BA4\u0BBF\u0BAF\u0BBE\u0B95\u0BAE\u0BAE\u0BCD", tl:["\u0B86","\u0BA4\u0BBF","\u0BAF\u0BBE","\u0B95","\u0BAE","\u0BAE\u0BCD"]},
+      {e:"EXODUS",      el:["E","X","O","D","U","S"],        t:"\u0BAF\u0BBE\u0BA4\u0BCD\u0BA4\u0BBF\u0BB0\u0BBE\u0B95\u0BAE\u0BAE\u0BCD", tl:["\u0BAF\u0BBE","\u0BA4\u0BCD","\u0BA4\u0BBF","\u0BB0\u0BBE","\u0B95","\u0BAE","\u0BAE\u0BCD"]},
+      {e:"LEVITICUS",   el:["L","E","V","I","T","I","C","U","S"], t:"\u0BB2\u0BC7\u0BB5\u0BBF\u0BAF\u0BB0\u0BBE\u0B95\u0BAE\u0BAE\u0BCD", tl:["\u0BB2\u0BC7","\u0BB5\u0BBF","\u0BAF","\u0BB0\u0BBE","\u0B95","\u0BAE","\u0BAE\u0BCD"]},
+      {e:"NUMBERS",  el:["N","U","M","B","E","R","S"], t:"\u0B8E\u0BA3\u0BCD\u0BA3\u0BBE\u0B95\u0BAE\u0BAE\u0BCD", tl:["\u0B8E","\u0BA3\u0BCD","\u0BA3\u0BBE","\u0B95","\u0BAE","\u0BAE\u0BCD"]}
+    ]
+  },
+  {
+    en:"Fruits of the Spirit", ta:"\u0B86\u0BB5\u0BBF\u0BAF\u0BBF\u0BA9\u0BCD \u0B95\u0BA9\u0BBF",
+    words:[
+      {e:"LOVE",  el:["L","O","V","E"], t:"\u0B85\u0BA9\u0BCD\u0BAA\u0BC1", tl:["\u0B85","\u0BA9\u0BCD","\u0BAA\u0BC1"]},
+      {e:"JOY",  el:["J","O","Y"], t:"\u0B9A\u0BA8\u0BCD\u0BA4\u0BCB\u0BB7\u0BAE\u0BCD", tl:["\u0B9A","\u0BA8\u0BCD","\u0BA4\u0BCB","\u0BB7","\u0BAE\u0BCD"]},
+      {e:"PEACE",  el:["P","E","A","C","E"], t:"\u0B9A\u0BAE\u0BBE\u0BA4\u0BBE\u0BA9\u0BAE\u0BCD", tl:["\u0B9A","\u0BAE\u0BBE","\u0BA4\u0BBE","\u0BA9","\u0BAE\u0BCD"]},
+      {e:"PATIENCE",  el:["P","A","T","I","E","N","C","E"], t:"\u0BA8\u0BC0\u0B9F\u0BBF\u0BAF\u0BAA\u0BCA\u0BB1\u0BC1\u0BAE\u0BC8", tl:["\u0BA8\u0BC0","\u0B9F\u0BBF","\u0BAF","\u0BAA\u0BCA","\u0BB1\u0BC1","\u0BAE\u0BC8"]},
+      {e:"KINDNESS",  el:["K","I","N","D","N","E","S","S"], t:"\u0BA4\u0BAF\u0BB5\u0BC1", tl:["\u0BA4","\u0BAF","\u0BB5\u0BC1"]},
+      {e:"GOODNESS",  el:["G","O","O","D","N","E","S","S"], t:"\u0BA8\u0BB1\u0BCD\u0B95\u0BC1\u0BA3\u0BAE\u0BCD", tl:["\u0BA8","\u0BB1\u0BCD","\u0B95\u0BC1","\u0BA3","\u0BAE\u0BCD"]},
+      {e:"FAITHFULNESS",  el:["F","A","I","T","H","F","U","L","N","E","S","S"], t:"\u0BB5\u0BBF\u0B9A\u0BC1\u0BB5\u0BBE\u0B9A\u0BAE\u0BCD", tl:["\u0BB5\u0BBF","\u0B9A\u0BC1","\u0BB5\u0BBE","\u0B9A","\u0BAE\u0BCD"]},
+      {e:"GENTLENESS",  el:["G","E","N","T","L","E","N","E","S","S"], t:"\u0B9A\u0BBE\u0BA8\u0BCD\u0BA4\u0BAE\u0BCD", tl:["\u0B9A\u0BBE","\u0BA8\u0BCD","\u0BA4","\u0BAE\u0BCD"]},
+      {e:"SELFCONTROL",  el:["S","E","L","F","C","O","N","T","R","O","L"], t:"\u0B87\u0B9A\u0BCD\u0B9A\u0BC8\u0BAF\u0B9F\u0B95\u0BCD\u0B95\u0BAE\u0BCD", tl:["\u0B87","\u0B9A\u0BCD","\u0B9A\u0BC8","\u0BAF","\u0B9F","\u0B95\u0BCD","\u0B95","\u0BAE\u0BCD"]}
+    ]
+  },
+  {
+    en:"Bible Women", ta:"\u0BAA\u0BC8\u0BAA\u0BBF\u0BB3\u0BCD \u0BAA\u0BC6\u0BA3\u0BCD\u0B95\u0BB3\u0BCD",
+    words:[
+      {e:"MARY",    el:["M","A","R","Y"],        t:"\u0BAE\u0BB0\u0BBF\u0BAF\u0BBE\u0BB3\u0BCD", tl:["\u0BAE","\u0BB0\u0BBF","\u0BAF\u0BBE","\u0BB3\u0BCD"]},
+      {e:"RUTH",    el:["R","U","T","H"],         t:"\u0BB0\u0BC2\u0BA4\u0BCD",     tl:["\u0BB0\u0BC2","\u0BA4\u0BCD"]},
+      {e:"ESTHER",  el:["E","S","T","H","E","R"], t:"\u0B8E\u0BB8\u0BCD\u0BA4\u0BB0\u0BCD", tl:["\u0B8E","\u0BB8\u0BCD","\u0BA4","\u0BB0\u0BCD"]},
+      {e:"SARAH",   el:["S","A","R","A","H"],     t:"\u0B9A\u0BBE\u0BB0\u0BBE\u0BB3\u0BCD", tl:["\u0B9A\u0BBE","\u0BB0\u0BBE","\u0BB3\u0BCD"]},
+      {e:"RACHEL",  el:["R","A","C","H","E","L"], t:"\u0BB0\u0BBE\u0B95\u0BC7\u0BB2\u0BCD", tl:["\u0BB0\u0BBE","\u0B95\u0BC7","\u0BB2\u0BCD"]},
+      {e:"LEAH",  el:["L","E","A","H"], t:"\u0BB2\u0BC7\u0BAF\u0BBE\u0BB3\u0BCD", tl:["\u0BB2\u0BC7","\u0BAF\u0BBE","\u0BB3\u0BCD"]},
+      {e:"MIRIAM",  el:["M","I","R","I","A","M"], t:"\u0BAE\u0BBF\u0BB0\u0BBF\u0BAF\u0BBE\u0BAE\u0BCD", tl:["\u0BAE\u0BBF","\u0BB0\u0BBF","\u0BAF\u0BBE","\u0BAE\u0BCD"]},
+      {e:"HANNAH",  el:["H","A","N","N","A","H"], t:"\u0B85\u0BA9\u0BCD\u0BA9\u0BBE\u0BB3\u0BCD", tl:["\u0B85","\u0BA9\u0BCD","\u0BA9\u0BBE","\u0BB3\u0BCD"]}
+    ]
+  },
+  {
+    en:"Bible Places", ta:"\u0BAA\u0BC8\u0BAA\u0BBF\u0BB3\u0BCD \u0B87\u0B9F\u0B99\u0BCD\u0B95\u0BB3\u0BCD",
+    words:[
+      {e:"JERUSALEM", el:["J","E","R","U","S","A","L","E","M"], t:"\u0B8E\u0BB0\u0BC1\u0B9A\u0BB2\u0BC7\u0BAE\u0BCD", tl:["\u0B8E","\u0BB0\u0BC1","\u0B9A","\u0BB2\u0BC7","\u0BAE\u0BCD"]},
+      {e:"BETHLEHEM", el:["B","E","T","H","L","E","H","E","M"], t:"\u0BAA\u0BC6\u0BA4\u0BCD\u0BB2\u0B95\u0BC7\u0BAE\u0BCD", tl:["\u0BAA\u0BC6","\u0BA4\u0BCD","\u0BB2","\u0B95\u0BC7","\u0BAE\u0BCD"]},
+      {e:"NAZARETH",  el:["N","A","Z","A","R","E","T","H"],     t:"\u0BA8\u0BBE\u0B9A\u0BB0\u0BC7\u0BA4\u0BCD", tl:["\u0BA8\u0BBE","\u0B9A","\u0BB0\u0BC7","\u0BA4\u0BCD"]},
+      {e:"GALILEE",   el:["G","A","L","I","L","E","E"],         t:"\u0B95\u0BB2\u0BBF\u0BB2\u0BC7\u0BAF\u0BBE", tl:["\u0B95","\u0BB2\u0BBF","\u0BB2\u0BC7","\u0BAF\u0BBE"]},
+      {e:"JORDAN",    el:["J","O","R","D","A","N"],             t:"\u0BAF\u0BCB\u0BB0\u0BCD\u0BA4\u0BBE\u0BA9\u0BCD", tl:["\u0BAF\u0BCB","\u0BB0\u0BCD","\u0BA4\u0BBE","\u0BA9\u0BCD"]},
+      {e:"JERICHO",   el:["J","E","R","I","C","H","O"],         t:"\u0B8E\u0BB0\u0BBF\u0B95\u0BCB", tl:["\u0B8E","\u0BB0\u0BBF","\u0B95\u0BCB"]},
+      {e:"EDEN",      el:["E","D","E","N"],                     t:"\u0B8F\u0BA4\u0BC7\u0BA9\u0BCD",     tl:["\u0B8F","\u0BA4\u0BC7","\u0BA9\u0BCD"]}
+    ]
+  },
+  {
+    en:"Prophets", ta:"\u0BA4\u0BC0\u0BB0\u0BCD\u0B95\u0BCD\u0B95\u0BA4\u0BB0\u0BBF\u0B9A\u0BBF\u0B95\u0BB3\u0BCD",
+    words:[
+      {e:"ISAIAH",   el:["I","S","A","I","A","H"],     t:"\u0B8F\u0B9A\u0BBE\u0BAF\u0BBE",   tl:["\u0B8F","\u0B9A\u0BBE","\u0BAF\u0BBE"]},
+      {e:"JEREMIAH", el:["J","E","R","E","M","I","A","H"], t:"\u0B8E\u0BB0\u0BC7\u0BAE\u0BBF\u0BAF\u0BBE", tl:["\u0B8E","\u0BB0\u0BC7","\u0BAE\u0BBF","\u0BAF\u0BBE"]},
+      {e:"DANIEL",   el:["D","A","N","I","E","L"],     t:"\u0BA4\u0BBE\u0BA9\u0BBF\u0BAF\u0BC7\u0BB2\u0BCD", tl:["\u0BA4\u0BBE","\u0BA9\u0BBF","\u0BAF\u0BC7","\u0BB2\u0BCD"]},
+      {e:"HOSEA",    el:["H","O","S","E","A"],         t:"\u0B93\u0B9A\u0BBF\u0BAF\u0BBE",   tl:["\u0B93","\u0B9A\u0BBF","\u0BAF\u0BBE"]},
+      {e:"JONAH",    el:["J","O","N","A","H"],         t:"\u0BAF\u0BCB\u0BA9\u0BBE",         tl:["\u0BAF\u0BCB","\u0BA9\u0BBE"]},
+      {e:"MICAH",    el:["M","I","C","A","H"],         t:"\u0BAE\u0BC0\u0B95\u0BBE",         tl:["\u0BAE\u0BC0","\u0B95\u0BBE"]},
+      {e:"AMOS",     el:["A","M","O","S"],             t:"\u0B86\u0BAE\u0BCB\u0BB8\u0BCD",   tl:["\u0B86","\u0BAE\u0BCB","\u0BB8\u0BCD"]}
+    ]
+  },
+  {
+    en:"Miracles of Jesus", ta:"\u0B87\u0BAF\u0BC7\u0B9A\u0BC1\u0BB5\u0BBF\u0BA9\u0BCD \u0B85\u0BB1\u0BCD\u0BAA\u0BC1\u0BA4\u0B99\u0BCD\u0B95\u0BB3\u0BCD",
+    words:[
+      {e:"HEALING",  el:["H","E","A","L","I","N","G"], t:"\u0B95\u0BC1\u0BA3\u0BAE\u0BBE\u0B95\u0BCD\u0B95\u0BC1\u0BA4\u0BB2\u0BCD", tl:["\u0B95\u0BC1","\u0BA3","\u0BAE\u0BBE","\u0B95\u0BCD","\u0B95\u0BC1","\u0BA4","\u0BB2\u0BCD"]},
+      {e:"FEEDING",  el:["F","E","E","D","I","N","G"], t:"\u0B89\u0BA3\u0BB5\u0BB3\u0BBF\u0BA4\u0BCD\u0BA4\u0BB2\u0BCD", tl:["\u0B89","\u0BA3","\u0BB5","\u0BB3\u0BBF","\u0BA4\u0BCD","\u0BA4","\u0BB2\u0BCD"]},
+      {e:"LAZARUS",  el:["L","A","Z","A","R","U","S"], t:"\u0BB2\u0BBE\u0B9A\u0BB0\u0BC1", tl:["\u0BB2\u0BBE","\u0B9A","\u0BB0\u0BC1"]},
+      {e:"WINE",  el:["W","I","N","E"], t:"\u0BA4\u0BBF\u0BB0\u0BBE\u0B9F\u0BCD\u0B9A\u0BC8\u0BB0\u0B9A\u0BAE\u0BCD", tl:["\u0BA4\u0BBF","\u0BB0\u0BBE","\u0B9F\u0BCD","\u0B9A\u0BC8","\u0BB0","\u0B9A","\u0BAE\u0BCD"]},
+      {e:"SIGHT",    el:["S","I","G","H","T"],         t:"\u0BAA\u0BBE\u0BB0\u0BCD\u0BB5\u0BC8", tl:["\u0BAA\u0BBE","\u0BB0\u0BCD","\u0BB5\u0BC8"]}
+    ]
+  },
+  {
+    en:"Kings of Israel", ta:"\u0B87\u0BB8\u0BCD\u0BB0\u0BB5\u0BC7\u0BB2\u0BBF\u0BA9\u0BCD \u0BB0\u0BBE\u0B9C\u0BBE\u0B95\u0BCD\u0B95\u0BB3\u0BCD",
+    words:[
+      {e:"SAUL",     el:["S","A","U","L"],             t:"\u0B9A\u0BB5\u0BC1\u0BB2\u0BCD",   tl:["\u0B9A","\u0BB5\u0BC1","\u0BB2\u0BCD"]},
+      {e:"DAVID",    el:["D","A","V","I","D"],         t:"\u0BA4\u0BBE\u0BB5\u0BC0\u0BA4\u0BC1", tl:["\u0BA4\u0BBE","\u0BB5\u0BC0","\u0BA4\u0BC1"]},
+      {e:"SOLOMON",  el:["S","O","L","O","M","O","N"], t:"\u0B9A\u0BBE\u0BB2\u0BCA\u0BAE\u0BCB\u0BA9\u0BCD", tl:["\u0B9A\u0BBE","\u0BB2\u0BCA","\u0BAE\u0BCB","\u0BA9\u0BCD"]},
+      {e:"JOSIAH",   el:["J","O","S","I","A","H"],     t:"\u0BAF\u0BCB\u0B9A\u0BBF\u0BAF\u0BBE", tl:["\u0BAF\u0BCB","\u0B9A\u0BBF","\u0BAF\u0BBE"]},
+      {e:"AHAB",   el:["A","H","A","B"], t:"\u0B86\u0B95\u0BBE\u0BAA\u0BCD", tl:["\u0B86","\u0B95\u0BBE","\u0BAA\u0BCD"]},
+      {e:"REHOBOAM",   el:["R","E","H","O","B","O","A","M"], t:"\u0BB0\u0BC6\u0B95\u0BCA\u0BAA\u0BC6\u0BAF\u0BBE\u0BAE\u0BCD", tl:["\u0BB0\u0BC6","\u0B95\u0BCA","\u0BAA\u0BC6","\u0BAF\u0BBE","\u0BAE\u0BCD"]}
+    ]
+  }
+];
+
+var THEME_META = [
+  {icon:"👥", en:"Disciples", ta:"சீஷர்கள்"},
+  {icon:"📜", en:"Moses Books", ta:"மோசேயின் புத்தகங்கள்"},
+  {icon:"🍇", en:"Spirit Fruit", ta:"ஆவியின் கனி"},
+  {icon:"👩", en:"Bible Women", ta:"வேதாகம பெண்கள்"},
+  {icon:"🏛️", en:"Bible Places", ta:"வேதாகம இடங்கள்"},
+  {icon:"📢", en:"Prophets", ta:"தீர்க்கதரிசிகள்"},
+  {icon:"✨", en:"Jesus Miracles", ta:"இயேசுவின் அற்புதங்கள்"},
+  {icon:"👑", en:"Israel Kings", ta:"இஸ்ரவேல் அரசர்கள்"}
+];
+
+// \u2500\u2500 CONFIG \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// EN grid sizes, Tamil grid smaller because syllables are wider
+var GSIZES_EN = {easy:8, medium:10, hard:12};
+var GSIZES_TA = {easy:6, medium:8,  hard:10};
+var TIMERS    = {easy:300, medium:420, hard:600};
+var WCOUNTS   = {easy:5, medium:7, hard:9};
+
+// \u2500\u2500 TRANSLATIONS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+var T = {
+  en:{
+    ht:"BIBLE WORD SEARCH", hs:"Find the Hidden Bible Words",
+    ln:"Your Name", ltheme:"Choose Theme", ld:"Choose Difficulty",
+    easy:"Easy", med:"Medium", hard:"Hard",
+    start:"Find the Words!", next:"Next Theme", lb:"\uD83C\uDFC6 Leaderboard",
+    load:"Building your puzzle...", giveup:"Give Up", again:"Play Again",
+    lbtit:"\uD83C\uDFC6 Leaderboard", lbs:"Top Word Searchers",
+    back:"\u2190 Back", err:"Please enter your name!",
+    ta:"All", te:"Easy", tm:"Medium", th:"Hard", pts:"pts",
+    note:"Words hidden: left\u2192right, top\u2193bottom", doneMini:function(f,t){return f+" / "+t+" themes completed";}, themeOf:function(i,t){return "Theme "+i+" of "+t;},
+    prog:function(f,t){var stars="";for(var i=0;i<t;i++)stars+=i<f?"⭐":"☆";return stars+"<br>"+f+" / "+t+" completed";},
+    rtit:function(f,t){return f===t?"All Found! \u2B50":f>t/2?"Good Job!":"Keep Trying!";},
+    rsb:function(f,t,s){return f+" of "+t+" words \u00B7 "+s+" pts";},
+    verse:{g:"\"Seek and you will find.\" \u2014 Matthew 7:7",
+           ok:"\"Your word is a lamp to my feet.\" \u2014 Psalm 119:105",
+           lo:"\"The word of God is alive and active.\" \u2014 Hebrews 4:12"}
+  },
+  ta:{
+    ht:"\u0BAA\u0BC8\u0BAA\u0BBF\u0BB3\u0BCD \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8 \u0BA4\u0BC7\u0B9F\u0BBF",
+    hs:"\u0BAE\u0BB1\u0BC8\u0BA8\u0BCD\u0BA4 \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8\u0B95\u0BB3\u0BC8 \u0B95\u0BA3\u0BCD\u0B9F\u0BC1\u0BAA\u0BBF\u0B9F\u0BBF",
+    ln:"\u0B89\u0B99\u0BCD\u0B95\u0BB3\u0BCD \u0BAA\u0BC6\u0BAF\u0BB0\u0BCD", ltheme:"கருப்பொருளை தேர்வு", ld:"\u0B95\u0B9E\u0BCD\u0B9A\u0BBF\u0BA4\u0BCD\u0BA4\u0BC8 \u0BA4\u0BC7\u0BB0\u0BCD\u0BB5\u0BC1",
+    easy:"\u0B8E\u0BB3\u0BBF\u0BA4\u0BC1", med:"\u0BA8\u0B9F\u0BC1\u0BA4\u0BCD\u0BA4\u0BB0\u0BAE\u0BCD", hard:"\u0B95\u0B9F\u0BBF\u0BA9\u0BAE\u0BCD",
+    start:"\u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8\u0B95\u0BB3\u0BC8 \u0BA4\u0BC7\u0B9F\u0BC1!", next:"அடுத்த கருப்பொருள்",
+    lb:"\uD83C\uDFC6 \u0BA4\u0BB0 \u0BB5\u0BB0\u0BBF\u0B9A\u0BC8",
+    load:"\u0BAA\u0BC1\u0BA4\u0BBF\u0BB0\u0BCD \u0B89\u0BB0\u0BC1\u0BB5\u0BBE\u0B95\u0BC1\u0B95\u0BBF\u0BB1\u0BCB\u0BAE\u0BCD...",
+    giveup:"\u0BB5\u0BBF\u0B9F\u0BC1", again:"\u0BAE\u0BC0\u0BA3\u0BCD\u0B9F\u0BC1\u0BAE\u0BCD \u0BB5\u0BBF\u0BB3\u0BC8\u0BAF\u0BBE\u0B9F\u0BC1",
+    lbtit:"\uD83C\uDFC6 \u0BA4\u0BB0 \u0BB5\u0BB0\u0BBF\u0B9A\u0BC8", lbs:"\u0B9A\u0BBF\u0BB1\u0BA8\u0BCD\u0BA4 \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8 \u0BA4\u0BC7\u0B9F\u0BC1\u0BAA\u0BB5\u0BB0\u0BCD\u0B95\u0BB3\u0BCD",
+    back:"\u2190 \u0BAA\u0BBF\u0BA9\u0BCD\u0BA9\u0BBE\u0BB2\u0BCD", err:"\u0B89\u0B99\u0BCD\u0B95\u0BB3\u0BCD \u0BAA\u0BC6\u0BAF\u0BB0\u0BC8 \u0B89\u0BB3\u0BCD\u0BB3\u0BBF\u0B9F\u0BB5\u0BC1\u0BAE\u0BCD!",
+    ta:"\u0B85\u0BA9\u0BC8\u0BA4\u0BCD\u0BA4\u0BC1\u0BAE\u0BCD", te:"\u0B8E\u0BB3\u0BBF\u0BA4\u0BC1", tm:"\u0BA8\u0B9F\u0BC1\u0BA4\u0BCD\u0BA4\u0BB0\u0BAE\u0BCD", th:"\u0B95\u0B9F\u0BBF\u0BA9\u0BAE\u0BCD", pts:"\u0BAA\u0BC1\u0BB3\u0BCD\u0BB3\u0BBF",
+    note:"\u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8\u0B95\u0BB3\u0BCD: \u0B87\u0B9F\u0BAE\u0BBF\u0BB0\u0BC1\u0BA8\u0BCD\u0BA4\u0BC1 \u0BB5\u0BB2\u0BAE\u0BBE\u0B95\u0BB5\u0BC1\u0BAE\u0BCD \u0BAE\u0BC7\u0BB2\u0BBF\u0BB0\u0BC1\u0BA8\u0BCD\u0BA4\u0BC1 \u0B95\u0BC0\u0BB4\u0BBE\u0B95\u0BB5\u0BC1\u0BAE\u0BCD", doneMini:function(f,t){return f+" / "+t+" கருப்பொருள்கள் முடிந்தது";}, themeOf:function(i,t){return "கருப்பொருள் "+i+" / "+t;},
+    prog:function(f,t){var stars="";for(var i=0;i<t;i++)stars+=i<f?"⭐":"☆";return stars+"<br>"+f+" / "+t+" முடிந்தது";},
+    rtit:function(f,t){return f===t?"\u0B85\u0BA9\u0BC8\u0BA4\u0BCD\u0BA4\u0BC1\u0BAE\u0BCD \u0B95\u0BA3\u0BCD\u0B9F\u0BC1\u0BAA\u0BBF\u0B9F\u0BBF\u0BA4\u0BCD\u0BA4\u0BB0\u0BCD!":f>t/2?"\u0BA8\u0BA9\u0BCD\u0BB1\u0BBE\u0B95!":"\u0BAE\u0BC7\u0BB2\u0BC1\u0BAE\u0BCD \u0BAA\u0B9F\u0BBF!";},
+    rsb:function(f,t,s){return f+" / "+t+" \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8\u0B95\u0BB3\u0BCD \u00B7 "+s;},
+    verse:{g:"\"\u0BA4\u0BC7\u0B9F\u0BC1\u0B99\u0BCD\u0B95\u0BB3\u0BCD, \u0B95\u0BBE\u0BA3\u0BCD\u0BAA\u0BC0\u0BB0\u0BCD\u0B95\u0BB3\u0BCD.\" \u2014 \u0BAE\u0BA4\u0BCD\u0BA4\u0BC7\u0BAF\u0BC1 7:7",
+           ok:"\"\u0B89\u0BAE\u0BCD\u0BAE\u0BC1\u0B9F\u0BC8\u0BAF \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8 \u0B8E\u0BA9\u0BCD \u0B95\u0BBE\u0BB2\u0BCD\u0B95\u0BB3\u0BC1\u0B95\u0BCD\u0B95\u0BC1 \u0BA4\u0BC0\u0BAA\u0BAE\u0BBE\u0B95\u0BB5\u0BC1\u0BAE\u0BCD.\" \u2014 \u0B9A\u0B99\u0BCD\u0B95\u0BC0\u0BA4\u0BAE\u0BCD 119:105",
+           lo:"\"\u0BA4\u0BC7\u0BB5\u0BA9\u0BC1\u0B9F\u0BC8\u0BAF \u0BB5\u0BBE\u0BB0\u0BCD\u0BA4\u0BCD\u0BA4\u0BC8 \u0B9C\u0BC0\u0BB5\u0BA9\u0BC1\u0BAE\u0BCD \u0BB5\u0BB2\u0BCD\u0BB2\u0BAE\u0BC8\u0BAF\u0BC1\u0BAE\u0BCD \u0B89\u0BB3\u0BCD\u0BB3\u0BA4\u0BC1.\" \u2014 \u0B8E\u0BAA\u0BBF\u0BB0\u0BC7\u0BAF\u0BB0\u0BCD 4:12"}
+  }
+};
+
+// \u2500\u2500 STATE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+var lang="en", diff="easy", pname="";
+var selectedThemeIndex=0, completedThemes=[];
+var grid=[], gsize=8, words=[], found=[];
+var isSel=false, startCell=null, curCells=[];
+var timerInt=null, timeLeft=0, score=0;
+var allScores=[], lbFilter="all", curTheme=null;
+
+// \u2500\u2500 HELPERS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function g(id){ return document.getElementById(id); }
+
+function loadCompleted(){try{completedThemes=JSON.parse(localStorage.getItem("ws_completed_themes")||"[]");}catch(e){completedThemes=[];}}
+function saveCompleted(){try{localStorage.setItem("ws_completed_themes",JSON.stringify(completedThemes));}catch(e){}}
+function markCompleted(i){if(completedThemes.indexOf(i)===-1){completedThemes.push(i);saveCompleted();}}
+function renderThemePicker(){
+  loadCompleted();
+  var el=g("theme-grid"); if(!el)return;
+  el.innerHTML=THEMES.map(function(th,i){
+    var m=THEME_META[i]||{icon:"📖",en:th.en,ta:th.ta};
+    var name=lang==="en"?m.en:m.ta;
+    var cls="tcard"+(i===selectedThemeIndex?" on":"")+(completedThemes.indexOf(i)!==-1?" done":"");
+    return "<div class='"+cls+"' data-theme='"+i+"'><span class='tcheck'>✓</span><span class='ticon'>"+m.icon+"</span><div class='tname'>"+name+"</div></div>";
+  }).join("");
+  el.querySelectorAll(".tcard").forEach(function(card){card.onclick=function(){selectedThemeIndex=+this.getAttribute("data-theme");renderThemePicker();};});
+  var mini=g("theme-progress-mini"); if(mini) mini.textContent=T[lang].doneMini(completedThemes.length,THEMES.length);
+}
+function themeTitle(){var m=THEME_META[selectedThemeIndex]||{icon:"📖"};return T[lang].themeOf(selectedThemeIndex+1,THEMES.length)+" · "+m.icon+" "+(lang==="en"?curTheme.en:curTheme.ta);}
+function celebrate(){
+  var box=document.createElement("div");box.className="confetti";document.body.appendChild(box);
+  var colors=["#E76D80","#ffd166","#8bd3dd","#95d5b2","#b8a1ff"];
+  for(var i=0;i<46;i++){var p=document.createElement("i");p.style.left=Math.random()*100+"vw";p.style.animationDelay=(Math.random()*0.5)+"s";p.style.background=colors[i%colors.length];box.appendChild(p);} 
+  setTimeout(function(){box.remove();},2200);
+}
+
+
+function showScreen(id){
+  ["scr-start","scr-load","scr-game","scr-result","scr-lb"].forEach(function(s){
+    var el=g(s);
+    if(s==="scr-game"){ el.className="scr"+(s===id?" on":""); }
+    else { el.className="card scr"+(s===id?" on":""); }
+  });
+}
+
+function setLang(l){
+  var wasPlaying = g("scr-game").classList.contains("on");
+  lang=l;
+  g("ben").className="lbtn"+(l==="en"?" on":"");
+  g("bta").className="lbtn"+(l==="ta"?" on":"");
+  var t=T[l];
+  g("htitle").textContent=t.ht; g("hsub").textContent=t.hs;
+  g("lbl-name").textContent=t.ln; g("lbl-theme").textContent=t.ltheme; g("lbl-diff").textContent=t.ld;
+  g("dn-easy").textContent=t.easy; g("dn-med").textContent=t.med; g("dn-hard").textContent=t.hard;
+  g("di-easy").textContent=l==="en"?"8x8":"6x6";
+  g("di-med").textContent=l==="en"?"10x10":"8x8";
+  g("di-hard").textContent=l==="en"?"12x12":"10x10";
+  g("btn-start").textContent=t.start; g("btn-lb").textContent=t.lb;
+  g("lbl-load").textContent=t.load; g("btn-giveup").textContent=t.giveup;
+  g("btn-again").textContent=t.again; g("btn-next").textContent=t.next; g("lbl-lb-title").textContent=t.lbtit;
+  g("lbl-lb-sub").textContent=t.lbs; g("btn-back").textContent=t.back;
+  g("tab-all").textContent=t.ta; g("tab-easy").textContent=t.te;
+  g("tab-med").textContent=t.tm; g("tab-hard").textContent=t.th;
+  g("lang-note").textContent=t.note;
+  g("pname").placeholder=l==="en"?"Enter your name...":"\u0B89\u0B99\u0BCD\u0B95\u0BB3\u0BCD \u0BAA\u0BC6\u0BAF\u0BB0\u0BCD...";
+  renderThemePicker();
+  // If game is active, restart with new language
+  if(wasPlaying && curTheme){
+    clearInterval(timerInt);
+    launchGame();
+  }
+}
+
+function setDiff(d){
+  diff=d;
+  ["easy","medium","hard"].forEach(function(x){ g("d-"+x).className="dcard"+(x===d?" on":""); });
+}
+
+// \u2500\u2500 GRID BUILD \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function getLetters(wo){ return lang==="en" ? wo.el : wo.tl; }
+
+function makeGrid(){
+  gsize = lang==="en" ? GSIZES_EN[diff] : GSIZES_TA[diff];
+  grid=[];
+  for(var r=0;r<gsize;r++){ grid.push([]); for(var c=0;c<gsize;c++) grid[r].push(""); }
+}
+
+function canPlace(letters,r,c,dr,dc){
+  for(var i=0;i<letters.length;i++){
+    var nr=r+dr*i, nc=c+dc*i;
+    if(nr<0||nr>=gsize||nc<0||nc>=gsize) return false;
+    if(grid[nr][nc] && grid[nr][nc]!==letters[i]) return false;
+  }
+  return true;
+}
+
+function placeWord(letters){
+  // Easy: only right and down. Medium: +diagonals. Hard: all 8
+  var dirs=[[0,1],[1,0]];
+  if(diff==="medium") dirs=[[0,1],[1,0],[1,1],[-1,1]];
+  if(diff==="hard")   dirs=[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]];
+  for(var a=0;a<300;a++){
+    var d=dirs[Math.floor(Math.random()*dirs.length)];
+    var r=Math.floor(Math.random()*gsize);
+    var c=Math.floor(Math.random()*gsize);
+    if(canPlace(letters,r,c,d[0],d[1])){
+      for(var i=0;i<letters.length;i++) grid[r+d[0]*i][c+d[1]*i]=letters[i];
+      return true;
+    }
+  }
+  return false;
+}
+
+function fillGrid(){
+  // Fill blanks with random letters matching the language
+  var enLetters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  var taFill=["\u0B95","\u0B99\u0BCD","\u0B9A","\u0BA4","\u0BA8","\u0BAA","\u0BAE","\u0BAF","\u0BB0","\u0BB2","\u0BB5","\u0B86","\u0B87","\u0B88","\u0B89","\u0B8E","\u0B8F","\u0B92","\u0B93","\u0B95\u0BBE","\u0BA4\u0BBE","\u0BA8\u0BBE","\u0BAE\u0BBE","\u0BB0\u0BBE","\u0BB2\u0BBE","\u0BB5\u0BBE"];
+  for(var r=0;r<gsize;r++){
+    for(var c=0;c<gsize;c++){
+      if(!grid[r][c]){
+        if(lang==="en") grid[r][c]=enLetters[Math.floor(Math.random()*26)];
+        else grid[r][c]=taFill[Math.floor(Math.random()*taFill.length)];
+      }
+    }
+  }
+}
+
+function buildPuzzle(){
+  makeGrid();
+  var cnt=WCOUNTS[diff];
+  var pool=curTheme.words.slice().sort(function(){return Math.random()-0.5;});
+  words=[];
+  for(var i=0;i<pool.length&&words.length<cnt;i++){
+    var wo=pool[i];
+    var letters=getLetters(wo);
+    if(letters.length<=gsize && placeWord(letters)) words.push(wo);
+  }
+  fillGrid();
+  found=[];
+}
+
+// \u2500\u2500 RENDER \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function renderGrid(){
+  var el=g("main-grid");
+  var isTa=(lang==="ta");
+  var target;
+  if(isTa){ target = diff==="easy"?44:diff==="medium"?40:36; }
+  else { target = diff==="easy"?36:diff==="medium"?32:28; }
+  var gap=4;
+  var parent=el.parentElement;
+  var avail=(parent&&parent.clientWidth?parent.clientWidth:Math.min(window.innerWidth-42,680));
+  var maxCell=Math.floor((avail-(gap*(gsize-1)))/gsize);
+  var size=Math.max(24,Math.min(target,maxCell));
+  var fs;
+  if(isTa){fs=Math.max(10,Math.floor(size*.43));}
+  else{fs=Math.max(12,Math.floor(size*.48));}
+  el.style.gridTemplateColumns="repeat("+gsize+","+size+"px)";
+  el.style.gap=gap+"px";
+  el.innerHTML="";
+  for(var r=0;r<gsize;r++){
+    for(var c=0;c<gsize;c++){
+      var div=document.createElement("div");
+      div.className="cell";
+      div.style.width=size+"px"; div.style.height=size+"px"; div.style.fontSize=fs+"px";
+      if(isTa) div.style.fontFamily="'Noto Sans Tamil',sans-serif";
+      div.textContent=grid[r][c];
+      div.setAttribute("data-r",r);
+      div.setAttribute("data-c",c);
+      el.appendChild(div);
+    }
+  }
+}
+
+function renderWords(){
+  var el=g("word-list"); el.innerHTML="";
+  words.forEach(function(wo,i){
+    var div=document.createElement("div");
+    div.className="wchip"; div.id="chip-"+i;
+    div.textContent = lang==="en" ? wo.e : wo.t;
+    el.appendChild(div);
+  });
+}
+
+function updateProgress(){
+  var pct=(found.length/words.length)*100;
+  g("prog-bar").style.width=pct+"%";
+  g("prog-txt").innerHTML=T[lang].prog(found.length,words.length);
+}
+
+// \u2500\u2500 SELECTION \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function getCell(el){ return el&&el.classList.contains("cell")?el:null; }
+function getTouchCell(e){
+  var t=e.touches[0];
+  return getCell(document.elementFromPoint(t.clientX,t.clientY));
+}
+
+function onDown(e){ var c=getCell(e.target); if(!c)return; isSel=true;startCell=c;curCells=[c];hilite([c]); }
+function onOver(e){ if(!isSel||!startCell)return; var c=getCell(e.target); if(c)updateSel(c); }
+function onUp(){ if(!isSel)return; isSel=false; checkWord(); clearSel(); curCells=[];startCell=null; }
+function onTDown(e){ e.preventDefault(); var c=getTouchCell(e); if(!c)return; isSel=true;startCell=c;curCells=[c];hilite([c]); }
+function onTMove(e){ e.preventDefault(); if(!isSel||!startCell)return; var c=getTouchCell(e); if(c)updateSel(c); }
+
+function updateSel(end){
+  var r1=+startCell.getAttribute("data-r"),c1=+startCell.getAttribute("data-c");
+  var r2=+end.getAttribute("data-r"),c2=+end.getAttribute("data-c");
+  var dr=r2-r1,dc=c2-c1;
+  if(dr===0&&dc===0){hilite([startCell]);return;}
+  var sr=dr===0?0:dr>0?1:-1,sc2=dc===0?0:dc>0?1:-1;
+  if(dr!==0&&dc!==0&&Math.abs(dr)!==Math.abs(dc)){hilite([startCell]);return;}
+  var steps=Math.max(Math.abs(dr),Math.abs(dc)),cells=[];
+  var ge=g("main-grid");
+  for(var i=0;i<=steps;i++){
+    var el=ge.querySelector("[data-r='"+(r1+sr*i)+"'][data-c='"+(c1+sc2*i)+"']");
+    if(el) cells.push(el);
+  }
+  curCells=cells; hilite(cells);
+}
+
+function hilite(cells){
+  g("main-grid").querySelectorAll(".cell.sel").forEach(function(c){ if(!c.classList.contains("found"))c.classList.remove("sel"); });
+  cells.forEach(function(c){ if(!c.classList.contains("found"))c.classList.add("sel"); });
+}
+function clearSel(){ g("main-grid").querySelectorAll(".cell.sel:not(.found)").forEach(function(c){c.classList.remove("sel");}); }
+
+function checkWord(){
+  if(curCells.length<2)return;
+  var selected=curCells.map(function(c){return c.textContent;});
+  var selectedStr=selected.join("");
+  var selectedRev=selected.slice().reverse().join("");
+  var idx=-1;
+  for(var i=0;i<words.length;i++){
+    if(found.indexOf(i)!==-1) continue;
+    var letters=getLetters(words[i]);
+    var wordStr=letters.join("");
+    if(selectedStr===wordStr||selectedRev===wordStr){idx=i;break;}
+  }
+  if(idx!==-1){
+    found.push(idx);
+    curCells.forEach(function(c){c.classList.add("found");c.classList.remove("sel");});
+    g("chip-"+idx).classList.add("done");
+    score+=100+Math.floor((timeLeft/TIMERS[diff])*100);
+    updateProgress();
+    if(found.length===words.length) setTimeout(endGame,500);
+  }
+}
+
+// \u2500\u2500 TIMER \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function startTimer(){
+  clearInterval(timerInt); timeLeft=TIMERS[diff]; updateTimer();
+  timerInt=setInterval(function(){ timeLeft--; updateTimer(); if(timeLeft<=0){clearInterval(timerInt);endGame();} },1000);
+}
+function updateTimer(){
+  var m=Math.floor(timeLeft/60),s=timeLeft%60;
+  var el=g("timer-lbl");
+  el.textContent="⏱ "+m+":"+(s<10?"0":"")+s;
+  el.className="tmbadge"+(timeLeft<60?" red":"");
+}
+
+// \u2500\u2500 GAME FLOW \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function startGame(){
+  pname=g("pname").value.trim();
+  if(!pname){ g("errmsg").textContent=T[lang].err; g("errmsg").style.display="block"; return; }
+  g("errmsg").style.display="none";
+  score=0;
+  curTheme=THEMES[selectedThemeIndex];
+  showScreen("scr-load");
+  setTimeout(launchGame, 600);
+}
+
+function launchGame(){
+  buildPuzzle();
+  showScreen("scr-game");
+  g("theme-lbl").textContent=themeTitle();
+  g("lang-note").textContent=T[lang].note;
+  renderGrid(); renderWords(); updateProgress(); startTimer();
+  var gridEl=g("main-grid");
+  gridEl.onmousedown=onDown;
+  gridEl.onmouseover=onOver;
+  document.onmouseup=onUp;
+  gridEl.addEventListener("touchstart",onTDown,{passive:false});
+  gridEl.addEventListener("touchmove",onTMove,{passive:false});
+  gridEl.addEventListener("touchend",onUp);
+}
+
+function endGame(){
+  clearInterval(timerInt);
+  var t=T[lang];
+  showScreen("scr-result");
+  var pct=found.length/words.length;
+  g("res-emoji").textContent=pct===1?"\u2B50":pct>0.5?"\uD83D\uDC4D":"\uD83D\uDCDA";
+  g("res-title").textContent=t.rtit(found.length,words.length);
+  g("res-score").textContent=score+" "+t.pts;
+  g("res-sub").textContent=t.rsb(found.length,words.length,score);
+  var vk=pct===1?"g":pct>0.5?"ok":"lo";
+  g("res-verse").textContent=t.verse[vk];
+  if(pct===1){markCompleted(selectedThemeIndex);renderThemePicker();celebrate();}
+  try{
+    var sc=JSON.parse(localStorage.getItem("ws3")||"[]");
+    sc.push({name:pname,score:score,found:found.length,total:words.length,difficulty:diff,date:new Date().toLocaleDateString()});
+    sc.sort(function(a,b){return b.score-a.score;});
+    localStorage.setItem("ws3",JSON.stringify(sc.slice(0,100)));
+    allScores=sc;
+  }catch(e){}
+}
+
+function showLB(){
+  showScreen("scr-lb");
+  try{allScores=JSON.parse(localStorage.getItem("ws3")||"[]");}catch(e){allScores=[];}
+  renderLB();
+}
+
+function setTab(f,el){
+  lbFilter=f;
+  document.querySelectorAll(".lbtab").forEach(function(b){b.className="lbtab";});
+  el.className="lbtab on"; renderLB();
+}
+
+function renderLB(){
+  var fl=lbFilter==="all"?allScores:allScores.filter(function(s){return s.difficulty===lbFilter;});
+  var el=g("lb-list");
+  if(!fl.length){el.innerHTML="<div class='lbempty'>"+T[lang].lbs+"</div>";return;}
+  var m=["\uD83E\uDD47","\uD83E\uDD48","\uD83E\uDD49"];
+  el.innerHTML=fl.slice(0,20).map(function(s,i){
+    return "<div class='lbitem'><div class='lbrank'>"+(m[i]||(i+1))+"</div>"
+      +"<div style='flex:1'><div class='lbname'>"+s.name+"</div>"
+      +"<div class='lbmeta'>"+s.found+"/"+s.total+" \u00B7 "+s.difficulty+" \u00B7 "+s.date+"</div></div>"
+      +"<div class='lbsc'>"+s.score+"</div></div>";
+  }).join("");
+}
+
+// \u2500\u2500 BUTTONS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+g("ben").onclick=function(){setLang("en");};
+g("bta").onclick=function(){setLang("ta");};
+g("d-easy").onclick=function(){setDiff("easy");};
+g("d-medium").onclick=function(){setDiff("medium");};
+g("d-hard").onclick=function(){setDiff("hard");};
+g("btn-start").onclick=startGame;
+g("btn-lb").onclick=showLB;
+g("btn-giveup").onclick=endGame;
+g("btn-again").onclick=function(){showScreen("scr-start");renderThemePicker();};
+g("btn-next").onclick=function(){selectedThemeIndex=(selectedThemeIndex+1)%THEMES.length;curTheme=THEMES[selectedThemeIndex];score=0;showScreen("scr-load");setTimeout(launchGame,450);};
+g("btn-lb2").onclick=showLB;
+g("btn-back").onclick=function(){showScreen("scr-start");};
+g("tab-all").onclick=function(){setTab("all",this);};
+g("tab-easy").onclick=function(){setTab("easy",this);};
+g("tab-med").onclick=function(){setTab("medium",this);};
+g("tab-hard").onclick=function(){setTab("hard",this);};
+setLang("en");
+renderThemePicker();
+</script>
+</body>
+</html>
